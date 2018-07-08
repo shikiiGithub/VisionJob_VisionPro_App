@@ -12,11 +12,13 @@ using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
+using dotNetLab.Vision.VPro;
 
 namespace shikii.VisionJob
 {
     public partial class MainForm : dotNetLab.Common.ModernUI.PageBase
     {
+       
         private dotNetLab.Widgets.TextBlock lbl_OutputInfo;
         private dotNetLab.Widgets.Container.CanvasPanel canvasPanel1;
         private dotNetLab.Widgets.ColorDecorator colorDecorator1;
@@ -30,7 +32,7 @@ namespace shikii.VisionJob
         //    public bool isEmpty = true;
 
         //}
-      //  Canvas cnv;
+         Canvas cnv;
 
         protected override void prepareData()
         {
@@ -84,8 +86,8 @@ namespace shikii.VisionJob
                 this.mobileListBox1.Items.Clear();
             }
         }
-      
 
+        //自动保存及清理图片
         void AutoSaveClearImage(Bitmap bmp)
         {
             //自动保存及清理图片
@@ -125,13 +127,7 @@ namespace shikii.VisionJob
         }
         private void btn_More_Click(object sender, EventArgs e)
         {
-            MenuForm frm = new MenuForm();
-            frm.EnableDialog = true;
-            frm.FormClosed += (s, ex) =>
-            {
-                frm.Dispose();
-            };
-            frm.Show();
+            AppManager.ShowFixedPage(typeof(MenuForm));
         }
 
         private void InitializeComponent()

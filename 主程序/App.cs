@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Windows.Forms;
 using dotNetLab.Common;
+using dotNetLab.Vision.VPro;
+
 namespace shikii.VisionJob
 {
    public class App
     {
        public static dotNetLab.Debug.CodeEngine codeEngine;
        public static dotNetLab.Vision.DspWndLayout DspWndLayoutManager;
-       [STAThread]
+        public static ToolBlockPowerSuite thisPowerSuite;
+        [STAThread]
        static void Main()
        {
            WinFormApp.BegineInvokeApp();

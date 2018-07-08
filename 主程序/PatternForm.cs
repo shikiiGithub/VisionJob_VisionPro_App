@@ -8,11 +8,11 @@ namespace shikii.VisionJob
 {
    public class PatternForm : Form
     {
-       // public dotNetLab.Vision.VPro.ToolBlockEditorAdapter editDapter;
+         public dotNetLab.Vision.VPro.ToolBlockEditorAdapter editDapter;
         public PatternForm()
         {
             InitializeComponent();
-           // editDapter = new dotNetLab.Vision.VPro.ToolBlockEditorAdapter();
+           editDapter = new dotNetLab.Vision.VPro.ToolBlockEditorAdapter();
         }
 
         private void InitializeComponent()
