@@ -18,12 +18,12 @@ namespace shikii.VisionJob
 
         private void btn_Search_Click(object sender, EventArgs e)
         {
-            bool isSearchDay = false;
-            if (dateTimePicker1.Text.Equals(dateTimePicker2.Text))
+             bool isSearchDay = false;
+            if(dateTimePicker1.Text.Equals(dateTimePicker2.Text))
             {
                 isSearchDay = true;
             }
-            if (dateTimePicker2.Value < dateTimePicker2.Value)
+            if(dateTimePicker2.Value <dateTimePicker2.Value)
             {
                 dotNetLab.Tipper.Error = "第二个日期控件的日期必须大于或者等于前一个日期控件的日期。";
                 return;
@@ -32,14 +32,14 @@ namespace shikii.VisionJob
             {
                 String searchTime = dateTimePicker1.Value.ToString("yyyy-MM-dd");
 
-                this.dataGridView1.DataSource = dotNetLab.Common.R.LogDB.ProvideTable(String.Format("SELECT Fire_Time,Message FROM LogTable where Fire_Time like '{0}%'; ", searchTime), dotNetLab.Data.DBOperator.OPERATOR_QUERY_TABLE);
+          dataGridView1.DataSource =  dotNetLab.Common.R.LogDB.ProvideTable(String.Format("SELECT Fire_Time,Message FROM LogTable where Fire_Time like '{0}%';", searchTime), dotNetLab.Data.DBOperator.OPERATOR_QUERY_TABLE);
              }
             else
             {
                 String searchTime1 = dateTimePicker1.Value.ToString("yyyy-MM-dd");
-                DateTime dt = dateTimePicker1.Value.AddDays(1);
+                 DateTime dt  = dateTimePicker1.Value.AddDays(1);
                 String searchTime2 = dt.ToString("yyyy-MM-dd");
-                this.dataGridView1.DataSource = dotNetLab.Common.R.LogDB.ProvideTable(String.Format("SELECT Fire_Time,Message FROM LogTable where Fire_Time >= '{0}' and Fire_Time < '{1}'; ", searchTime1,searchTime2), dotNetLab.Data.DBOperator.OPERATOR_QUERY_TABLE);
+                this.dataGridView1.DataSource = dotNetLab.Common.R.LogDB.ProvideTable(String.Format("SELECT Fire_Time,Message FROM LogTable where Fire_Time >='{0}' and Fire_Time <'{1}';", searchTime1,searchTime2), dotNetLab.Data.DBOperator.OPERATOR_QUERY_TABLE);
             }
         }
     }
