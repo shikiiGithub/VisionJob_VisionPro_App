@@ -86,9 +86,8 @@ namespace shikii.VisionJob
                 this.mobileListBox1.Items.Clear();
             }
         }
-
-        //自动保存及清理图片
-        void AutoSaveClearImage(Bitmap bmp)
+        //要使MenuForm 自动清理文本框正常显示请启用下列代码
+        protected void AutoSaveClearImage(Bitmap bmp)
         {
             //自动保存及清理图片
             //保存

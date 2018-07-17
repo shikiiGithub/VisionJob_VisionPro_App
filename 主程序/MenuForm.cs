@@ -1,8 +1,6 @@
 ﻿//using Cognex.VisionPro.ToolBlock;
 //using dotNetLab.Vision.VPro;
-using Cognex.VisionPro.ToolBlock;
 using dotNetLab.Common;
-using dotNetLab.Vision.VPro;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +13,6 @@ namespace shikii.VisionJob
 {
     public class MenuForm : dotNetLab.Common.ModernUI.SessionPage
     {
-
 
         protected override void prepareCtrls()
         {
@@ -35,8 +32,6 @@ namespace shikii.VisionJob
                 Directory.CreateDirectory("Projs");
 
              strArr = Directory.GetDirectories("Projs");
-           
-           
            
             for (int i = 0; i < strArr.Length; i++)
             {
@@ -119,13 +114,12 @@ namespace shikii.VisionJob
             {
                 String strPath = String.Format("Projs\\{0}", cmbx_CurrentProjectName.Text);
 
-                //shikii 可能需要根据实际情况更改
-                String strFilePath =  Path.Combine(strPath,
-                    Path.GetFileName(Directory.GetFiles(strPath, "*.vpp")[0]));
+                // strPath =Path.Combine( Path.GetDirectoryName(Application.ExecutablePath),strPath);
+              //  String strFilePath = Directory.GetFiles(strPath, "*.vpp")[0];
 
-                CompactDB.Write("Current_Project", strFilePath);
+               // CompactDB.Write("Current_Project", strFilePath);
 
-                App.thisPowerSuite.ThisToolBlock = ToolBlockPowerSuite.LoadVpp<CogToolBlock>(strFilePath);
+              //  App.thisPowerSuite.ThisToolBlock = ToolBlockPowerSuite.LoadVpp<CogToolBlock>(strFilePath);
 
             };
         }
@@ -135,7 +129,7 @@ namespace shikii.VisionJob
         private void lnk_TrainPattern_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             PatternForm frm = new PatternForm();
-             frm.PrepareToolBlockEditor(frm.editDapter, App.thisPowerSuite.ThisToolBlock, App.thisPowerSuite.ThisToolBlock, CompactDB.FetchValue("Current_Project"));
+          //  frm.PrepareToolBlockEditor(frm.editDapter, App.thisPowerSuite.ThisToolBlock, App.thisPowerSuite.ThisToolBlock, CompactDB.FetchValue("Current_Project"));
             //Localize lc = new Localize();
             //lc.LocalizeToolBlock(frm.editDapter.toolBox);
             frm.FormClosed += (s, ex) =>
@@ -145,6 +139,22 @@ namespace shikii.VisionJob
             frm.Show();
 
         }
+        private void lnk_RetriveLogs_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            RetriveLogForm frm = new RetriveLogForm();
+            frm.Show();
+            frm.FormClosed += (s, ex) =>
+            {
+                frm.Dispose();
+            };
+        }
+
+        private void lnk_CommunicationConfig_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            AppManager.ShowPage(typeof(TCPNetConnectForm));
+        }
+
+
         private dotNetLab.Widgets.Card card2;
         private LinkLabel lnk_TrainPattern;
         private dotNetLab.Widgets.TextBlock textBlock2;
@@ -164,10 +174,11 @@ namespace shikii.VisionJob
         private dotNetLab.Widgets.MobileTextBox mobileTextBox4;
         private LinkLabel lnk_RetriveLogs;
         private LinkLabel lnk_CommunicationConfig;
+        private LinkLabel lnk_ManualRun;
         private dotNetLab.Widgets.ColorDecorator colorDecorator1;
         private void InitializeComponent()
         {
-            dotNetLab.Widgets.UIBinding.UIElementBinderInfo uiElementBinderInfo1 = new dotNetLab.Widgets.UIBinding.UIElementBinderInfo();
+            dotNetLab.Widgets.UIBinding.UIElementBinderInfo uiElementBinderInfo3 = new dotNetLab.Widgets.UIBinding.UIElementBinderInfo();
             this.mobileTextBox4 = new dotNetLab.Widgets.MobileTextBox();
             this.colorDecorator1 = new dotNetLab.Widgets.ColorDecorator();
             this.card2 = new dotNetLab.Widgets.Card();
@@ -188,28 +199,25 @@ namespace shikii.VisionJob
             this.textBlock4 = new dotNetLab.Widgets.TextBlock();
             this.textBlock3 = new dotNetLab.Widgets.TextBlock();
             this.textBlock1 = new dotNetLab.Widgets.TextBlock();
+            this.lnk_ManualRun = new System.Windows.Forms.LinkLabel();
             this.card2.SuspendLayout();
             this.card1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // tipper
-            // 
-            this.tipper.Location = new System.Drawing.Point(362, 445);
             // 
             // mobileTextBox4
             // 
             this.mobileTextBox4.ActiveColor = System.Drawing.Color.Cyan;
             this.mobileTextBox4.BackColor = System.Drawing.Color.Transparent;
-            uiElementBinderInfo1.DBEngineIndex = 0;
-            uiElementBinderInfo1.EnableCheckBox_One_Zero = false;
-            uiElementBinderInfo1.FieldName = "Val";
-            uiElementBinderInfo1.Filter = "Name=\'AutoClearTime\' ";
-            uiElementBinderInfo1.Ptr = null;
-            uiElementBinderInfo1.StoreInDB = true;
-            uiElementBinderInfo1.StoreIntoDBRealTime = true;
-            uiElementBinderInfo1.TableName = "App_Extension_Data_Table";
-            uiElementBinderInfo1.ThisControl = this.mobileTextBox4;
-            this.mobileTextBox4.DataBindingInfo = uiElementBinderInfo1;
+            uiElementBinderInfo3.DBEngineIndex = 0;
+            uiElementBinderInfo3.EnableCheckBox_One_Zero = false;
+            uiElementBinderInfo3.FieldName = "Val";
+            uiElementBinderInfo3.Filter = "Name=\'AutoClearTime\' ";
+            uiElementBinderInfo3.Ptr = null;
+            uiElementBinderInfo3.StoreInDB = true;
+            uiElementBinderInfo3.StoreIntoDBRealTime = true;
+            uiElementBinderInfo3.TableName = "App_Extension_Data_Table";
+            uiElementBinderInfo3.ThisControl = this.mobileTextBox4;
+            this.mobileTextBox4.DataBindingInfo = uiElementBinderInfo3;
             this.mobileTextBox4.DoubleValue = double.NaN;
             this.mobileTextBox4.EnableMobileRound = true;
             this.mobileTextBox4.EnableNullValue = false;
@@ -235,10 +243,9 @@ namespace shikii.VisionJob
             // 
             // colorDecorator1
             // 
-            this.colorDecorator1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.colorDecorator1.BackColor = System.Drawing.Color.White;
             this.colorDecorator1.DataBindingInfo = null;
-            this.colorDecorator1.Location = new System.Drawing.Point(6, 471);
+            this.colorDecorator1.Location = new System.Drawing.Point(6, 441);
             this.colorDecorator1.MainBindableProperty = "";
             this.colorDecorator1.Name = "colorDecorator1";
             this.colorDecorator1.Size = new System.Drawing.Size(150, 53);
@@ -250,6 +257,7 @@ namespace shikii.VisionJob
             this.card2.BackColor = System.Drawing.Color.Transparent;
             this.card2.BorderColor = System.Drawing.Color.Gray;
             this.card2.BorderThickness = 0;
+            this.card2.Controls.Add(this.lnk_ManualRun);
             this.card2.Controls.Add(this.label2);
             this.card2.Controls.Add(this.label1);
             this.card2.Controls.Add(this.mobileTextBox4);
@@ -265,7 +273,7 @@ namespace shikii.VisionJob
             this.card2.HeadHeight = 30;
             this.card2.ImagePos = new System.Drawing.Point(0, 0);
             this.card2.ImageSize = new System.Drawing.Size(0, 0);
-            this.card2.Location = new System.Drawing.Point(351, 92);
+            this.card2.Location = new System.Drawing.Point(318, 77);
             this.card2.MainBindableProperty = "card1";
             this.card2.Name = "card2";
             this.card2.NormalColor = System.Drawing.Color.Snow;
@@ -379,7 +387,7 @@ namespace shikii.VisionJob
             this.card1.HeadHeight = 40;
             this.card1.ImagePos = new System.Drawing.Point(0, 0);
             this.card1.ImageSize = new System.Drawing.Size(0, 0);
-            this.card1.Location = new System.Drawing.Point(72, 92);
+            this.card1.Location = new System.Drawing.Point(53, 77);
             this.card1.MainBindableProperty = "card1";
             this.card1.Name = "card1";
             this.card1.NormalColor = System.Drawing.Color.Snow;
@@ -630,9 +638,20 @@ namespace shikii.VisionJob
             this.textBlock1.Vertical = false;
             this.textBlock1.WhereReturn = ((byte)(0));
             // 
+            // lnk_ManualRun
+            // 
+            this.lnk_ManualRun.AutoSize = true;
+            this.lnk_ManualRun.Location = new System.Drawing.Point(73, 226);
+            this.lnk_ManualRun.Name = "lnk_ManualRun";
+            this.lnk_ManualRun.Size = new System.Drawing.Size(69, 20);
+            this.lnk_ManualRun.TabIndex = 5;
+            this.lnk_ManualRun.TabStop = true;
+            this.lnk_ManualRun.Text = "手动操作";
+            this.lnk_ManualRun.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnk_ManualRun_LinkClicked);
+            // 
             // MenuForm
             // 
-            this.ClientSize = new System.Drawing.Size(665, 530);
+            this.ClientSize = new System.Drawing.Size(600, 500);
             this.Controls.Add(this.card2);
             this.Controls.Add(this.card1);
             this.Controls.Add(this.colorDecorator1);
@@ -653,20 +672,12 @@ namespace shikii.VisionJob
         {
 
         }
-
-        private void lnk_RetriveLogs_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        
+        private void lnk_ManualRun_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            RetriveLogForm frm = new RetriveLogForm();
-            frm.Show();
-            frm.FormClosed += (s, ex) =>
-            {
-                frm.Dispose();
-            };
+            AppManager.ShowPage(typeof(ManualForm));
         }
 
-        private void lnk_CommunicationConfig_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            AppManager.ShowPage(typeof(TCPNetConnectForm));
-        }
+      
     }
 }
