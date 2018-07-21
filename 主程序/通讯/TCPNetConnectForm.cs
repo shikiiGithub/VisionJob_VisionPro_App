@@ -10,7 +10,7 @@ namespace shikii.VisionJob
     {
         readonly string TCPTABLENAME = "TCP";
         readonly string SERIALPORTTABLENAME = "SerialPort";
-
+    
         protected override void prepareCtrls()
         {
             base.prepareCtrls();
