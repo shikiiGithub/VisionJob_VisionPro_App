@@ -41,6 +41,16 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shikii_New_App_Framework\数据中心\DBManager.csproj">
+      <Project>{203dbcc1-7fe8-489f-9204-0d01f6ca0a18}</Project>
+      <Name>DBManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\主程序\主程序.csproj">
+      <Project>{51547e55-b658-4ab7-95c1-082d33a5f933}</Project>
+      <Name>主程序</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
