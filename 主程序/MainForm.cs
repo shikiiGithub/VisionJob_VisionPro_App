@@ -12,45 +12,31 @@ using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
-using dotNetLab.Vision.VPro;
 
 namespace shikii.VisionJob
 {
     public partial class MainForm : dotNetLab.Common.ModernUI.PageBase
     {
-       
         private dotNetLab.Widgets.TextBlock lbl_OutputInfo;
         private dotNetLab.Widgets.Container.CanvasPanel canvasPanel1;
         private dotNetLab.Widgets.ColorDecorator colorDecorator1;
         public dotNetLab.Widgets.MobileListBox mobileListBox1;
         private dotNetLab.Widgets.Direction btn_More;
         TCPFactoryServer factoryServer;
-        //List<Point> pnts_Results;
-        //internal class CheckPoint
-        //{
-        //    public Point pnt = new Point();
-        //    public bool isEmpty = true;
-
-        //}
-         Canvas cnv;
-
+        
+         //  Canvas[] cnvs;
+        //  Canvas cnvs;
         protected override void prepareData()
         {
             base.prepareData();
-           // pnts_Results = new List<Point>();
+           
             //factoryServer = new TCPFactoryServer();
-            //factoryServer.Port = int.Parse(CompactDB.FetchValue("Port"));
-            //factoryServer.LoopGapTime = int.Parse(CompactDB.FetchValue("LoopGapTime"));
-            //factoryServer.Boot(CompactDB.FetchValue("IP"));
+            
+            //factoryServer.Boot();
 
             //factoryServer.Route = (nWhichClient, byts) =>
             //{
-            //    if (byts[0] == 1)
-            //    {
-            //        byts[0] = 0;
-            //        this.MainCheckLEDSupporting();
-
-            //    }
+             
             //};
 
         }
@@ -58,8 +44,18 @@ namespace shikii.VisionJob
         {
             base.prepareCtrls();
             InitializeComponent();
-            //cnv = new Canvas();
-            //App.thisPowerSuite = this.PrepareToolBlockPowerSuit(CompactDB.FetchValue("Current_Project"), cnv);
+            //cnvs = new Canvas();
+            //如果是数组
+            //cnvs = new Canvas[n];
+            //for (int i = 0; i < cnvs.Length; i++)
+            //{
+            //    cnvs[i] = new Canvas();
+            //}
+            //如果不是数组
+            //App.thisPowerSuite = this.PrepareToolBlockPowerSuit(CompactDB.FetchValue("Current_Project"), cnvs);
+            //如果是数组
+            //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(CompactDB.FetchValue("Current_Project"), cnvs);
+            //to do 添加窗体数量
             //App.DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), this.canvasPanel1, 1);
         }
         protected override void prepareEvents()
@@ -86,6 +82,7 @@ namespace shikii.VisionJob
                 this.mobileListBox1.Items.Clear();
             }
         }
+      
         //要使MenuForm 自动清理文本框正常显示请启用下列代码
         protected void AutoSaveClearImage(Bitmap bmp)
         {
