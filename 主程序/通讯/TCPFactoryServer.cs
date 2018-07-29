@@ -9,6 +9,8 @@ namespace shikii.VisionJob
 {
     public class TCPFactoryServer : XTCPServer
     {
+        readonly string TCPTABLENAME = "TCP";
+         
         public delegate void TCPClientConnectedInvokeCallback(int nExecuteCode);
         public TCPClientConnectedInvokeCallback tcpClientConnectedInvoke;
         // For Decoding Hex String
@@ -20,8 +22,12 @@ namespace shikii.VisionJob
             try
             {
                 R.CompactDB.GetAllTableNames();
-
-                List<String> lst = R.CompactDB.GetNameColumnValues(R.CompactDB.DefaultTable);
+                if (!R.CompactDB.AllTableNames.Contains(TCPTABLENAME))
+                {
+                    R.CompactDB.CreateKeyValueTable(TCPTABLENAME);
+                }
+               R. CompactDB.TargetTable = TCPTABLENAME;
+                List<String> lst =R. CompactDB.GetNameColumnValues(R.CompactDB.TargetTable);
                 if (lst.Count == 0)
                 {
                     R.Pipe.Error("读取网络配置时失败，将增加新记录");
@@ -41,6 +47,7 @@ namespace shikii.VisionJob
                 Port = int.Parse(R.CompactDB.FetchValue("Port"));
                 LoopGapTime = int.Parse(R.CompactDB.FetchValue("LoopGapTime"));
                 IP = R.CompactDB.FetchValue("IP");
+                R.CompactDB.TargetTable = R.CompactDB.DefaultTable;
 
             }
             catch (Exception ex)
