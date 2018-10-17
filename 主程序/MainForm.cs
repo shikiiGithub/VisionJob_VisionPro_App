@@ -19,12 +19,13 @@ namespace shikii.VisionJob
 {
     public partial class MainForm : dotNetLab.Common.ModernUI.PageBase
     {
-        
-        TCPFactoryServer factoryServer;
-     public  dotNetLab.Vision.DspWndLayout DspWndLayoutManager;
 
+       // 显示相关信息请启用下列代码
         //  Canvas[] cnvs;
         //  Canvas cnvs;
+        TCPFactoryServer factoryServer;
+        public  dotNetLab.Vision.DspWndLayout DspWndLayoutManager;
+
         protected override void prepareData()
         {
             base.prepareData();
@@ -66,17 +67,24 @@ namespace shikii.VisionJob
         //准备视觉库
         public void PrepareVision()
         {
-            //cnvs = new Canvas();
-            //如果是数组
+
+            String ThisAppDir = Path.GetDirectoryName(Application.ExecutablePath);
+            String currentProjectShortPath = CompactDB.FetchValue("Current_Project");
+            String AbsoluteCurrentProjectPath = Path.Combine(ThisAppDir, currentProjectShortPath);
+            //如果不是数组
+           //  cnvs = new Canvas();
+            //如果是数组，一个 Canvas 对象对应一个显示窗口
             //cnvs = new Canvas[n];
             //for (int i = 0; i < cnvs.Length; i++)
             //{
             //    cnvs[i] = new Canvas();
             //}
-            //如果不是数组
-             //  App.thisPowerSuite = this.PrepareToolBlockPowerSuit(CompactDB.FetchValue("Current_Project"), cnvs);
-            //如果是数组
-            //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(CompactDB.FetchValue("Current_Project"), cnvs);
+            //如果不是数组，如果多个vpp 则定义多个,
+            //记得给App.CurrentToolBlock赋值
+              // App.thisPowerSuite = this.PrepareToolBlockPowerSuit(AbsoluteCurrentProjectPath + "你的vpp名（只包含名称和后缀名）.vpp", cnvs);
+            //如果是数组，，如果多个vpp 则定义多个,
+            //记得给App.CurrentToolBlock赋值
+            //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(AbsoluteCurrentProjectPath + "你的vpp名（只包含名称和后缀名）.vpp", cnvs);
             //添加窗体
             DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), this.canvasPanel1, CompactDB.FetchIntValue("DisplayWndNum"));
         }
@@ -180,7 +188,7 @@ namespace shikii.VisionJob
             catch (Exception ex)
             {
 
-                Tipper.Error = "检测到你可能启用了权限管理,但是可能配置不正确！";
+               dotNetLab.Tipper.Error = "检测到你可能启用了权限管理,但是可能配置不正确！";
             }
             if (n > 0)
             {
@@ -365,3 +373,122 @@ namespace shikii.VisionJob
         }
     }
 }
+
+//使用范例
+/*
+     public  void MainCheckLEDSupporting()
+        {
+            App.thisPowerSuite.Run("CogFixtureTool2.OutputImage",
+                   cnv, this, (ir, obj) =>
+                   {
+                       pnts_Results.Clear();
+                       ToolBlockPowerSuite.DisplayResultImage
+                        (App.DspWndLayoutManager.DisplayWnds[0] as CogRecordDisplay, ir, cnv);
+                      
+          
+                       //取出输出图片
+                       CogImage8Grey img = App.thisPowerSuite.RunOutPuts[0] as CogImage8Grey;
+                     
+
+                       int nImageSizeWidth = img.Width;
+                       int nImageSizeHeight = img.Height;
+                       int nUnitSizeWidth = img.Width / 22;
+                       int nUnitSizeHeight = img.Height / 22;
+
+                       AutoSaveClearImage(img.ToBitmap());
+
+                       if (cnv.Labels[0].Text == "OK")
+                       {
+
+                           byte[] bytArry = new byte[2] { 0, 0 };
+                           factoryServer.Send_Mill(0, bytArry);
+                           return;
+                       }
+
+                       //拿到Blob分析结果
+                       CogBlobResults results = App.thisPowerSuite.RunOutPuts[1] as CogBlobResults;
+                       //得到的Blob 数
+                       int nNum = results.GetBlobs().Count;
+                       //初始化容器
+                       CheckPoint[] checkPoints = new CheckPoint[22 * 22];
+                      
+                       //行
+                       for (int i = 0; i < 22; i++)
+                       {
+                           //列
+                           for (int j = 0; j < 22; j++)
+                           {
+                               checkPoints[i * 22 + j] = new CheckPoint();
+                               //容器中的每个元素储存为该元素的行，列值
+                               checkPoints[i * 22 + j].pnt = new Point(i, j);
+                           }
+                       }
+                        
+                       //从Blob 分析结果中得到每个正常槽的对应的行列
+                       for (int i = 0; i < nNum; i++)
+                       {
+
+                           int nRow = -1;
+                           int nColumn = -1;
+                           double X = (int)results.GetBlobs()[i].CenterOfMassX;
+                           int Y = (int)results.GetBlobs()[i].CenterOfMassY;
+                           double nX = X / nUnitSizeWidth;
+                           if (X % nUnitSizeWidth == 0)
+                               nColumn = (int)nX;
+                           else
+                               nColumn = (int)(nX + 1);
+
+                           double nY = Y / nUnitSizeHeight;
+                           if (Y % nUnitSizeHeight == 0)
+                               nRow = (int)nY;
+                           else
+                               nRow = (int)(nY + 1);
+                           checkPoints[(nRow - 1) * 22 + (nColumn - 1)].isEmpty = false;
+                       }
+                       //收集行列处槽是否为空的坐标。最终是要得到有缺陷的槽的行列值
+                       //行
+                       for (int i = 0; i < 22; i++)
+                       {
+                           //列
+                           for (int j = 0; j < 22; j++)
+                           {
+                               if (checkPoints[i * 22 + j].isEmpty)
+                               {
+                                   //使用List 来存储缺陷槽的行列
+                                   pnts_Results.Add(new Point(i +1, j+1));
+                                  
+                               }
+                           }
+
+                       }
+                       //显示输出信息
+                       ConsolePipe.Error(String.Format("发现{0}个问题", pnts_Results.Count));
+                       for (int i = 0; i < pnts_Results.Count; i++)
+                       {
+                           ConsolePipe.Info("行，列 ：" + pnts_Results[i].X.ToString() + "," + pnts_Results[i].Y.ToString());
+                       }
+                       //发送到PLC
+                       //StringBuilder sb = new StringBuilder();
+                       //sb.Append(0.ToString("X2"));
+                       //for (int i = 0; i < pnts_Results.Count; i++)
+                       //{
+                       //    sb.Append(pnts_Results[i].X.ToString("X2") + pnts_Results[i].Y.ToString("X2"));
+                       //}
+                       //byte[] bytArr = factoryServer.TextEncode.GetBytes(sb.ToString());
+
+                       byte[] bytArray = new byte[pnts_Results.Count * 2 +1];
+                       bytArray[0] = 0;
+                       for (int i = 1; i < bytArray.Length; i +=2)
+                       {
+                           // sb.Append(pnts_Results[i].X.ToString("X2") + pnts_Results[i].Y.ToString("X2"));
+                           bytArray[i] = (byte)pnts_Results[(i-1)/2].X;
+                           bytArray [i+1] = (byte)pnts_Results[(i -1)/2].Y;
+
+                       }
+
+                       factoryServer.Send_Mill(0, bytArray);
+                   }
+                 );
+        }
+     
+     */

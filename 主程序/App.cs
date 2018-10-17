@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Windows.Forms;
 using dotNetLab.Common;
+using dotNetLab.Vision.VPro;
+
 namespace shikii.VisionJob
 {
    public class App
     {
-       public static dotNetLab.Debug.CodeEngine codeEngine;
-      
-       [STAThread]
+
+
+        //to do  记录各VPP的路径,定义各个VPP对应用的ToolBlockPowerSuite
+        public static MainForm frm;
+
+        [STAThread]
        static void Main()
        {
            WinFormApp.BegineInvokeApp();
-           MainForm frm = new MainForm() ;
+             frm = new MainForm() ;
            WinFormApp.EndInvokeApp(frm,frm.PrepareVision,frm.mobileListBox1);
          
          

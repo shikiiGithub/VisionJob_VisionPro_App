@@ -103,7 +103,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
-    <Compile Include="External\CodeEngine.cs" />
     <Compile Include="取相\FifoForm.cs">
       <SubType>Form</SubType>
     </Compile>
