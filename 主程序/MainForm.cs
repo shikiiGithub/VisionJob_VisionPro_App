@@ -5,13 +5,15 @@ using System.Windows.Forms;
 using dotNetLab.Common.ModernUI;
 using dotNetLab.Common;
 using System.Threading;
-//using dotNetLab.Vision.VPro;
-//using Cognex.VisionPro;
-//using Cognex.VisionPro.PMAlign;
-//using Cognex.VisionPro.Blob;
+using dotNetLab.Vision.VPro;
+using Cognex.VisionPro;
+using Cognex.VisionPro.PMAlign;
+using Cognex.VisionPro.Blob;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
+ 
+using dotNetLab;
 
 namespace shikii.VisionJob
 {
@@ -26,22 +28,44 @@ namespace shikii.VisionJob
         protected override void prepareData()
         {
             base.prepareData();
-           
+
+            String str = CompactDB.FetchValue(App.AutoCleanTime);
+            if (str == null)
+                CompactDB.Write(App.AutoCleanTime, "0");
+            String ApplyUserPriority = CompactDB.FetchValue(App.ApplyUserPriority);
+            if (ApplyUserPriority == null)
+                CompactDB.Write(App.ApplyUserPriority, "0");
             //factoryServer = new TCPFactoryServer();
-            
+
             //factoryServer.Boot();
 
             //factoryServer.Route = (nWhichClient, byts) =>
             //{
-             
+
             //};
 
         }
-        protected override void prepareCtrls()
+        void CheckProjectFolder()
         {
-            base.prepareCtrls();
-            InitializeComponent();
-            DspWndLayoutManager = new dotNetLab.Vision.DspWndLayout();
+            if (!Directory.Exists(App.ProjsFolderName))
+            {
+                Directory.CreateDirectory(App.ProjsFolderName);
+                if (!Directory.Exists(App.OriginProjectPath))
+                {
+                    Directory.CreateDirectory(App.OriginProjectPath);
+                    String str = CompactDB.FetchValue(App.CurrentProject);
+                    if (String.IsNullOrEmpty(str) || str.Equals("0"))
+                    {
+                        CompactDB.Write(App.CurrentProject, App.OriginProjectPath);
+                    }
+                }
+
+            }
+        }
+
+        //准备视觉库
+        public void PrepareVision()
+        {
             //cnvs = new Canvas();
             //如果是数组
             //cnvs = new Canvas[n];
@@ -50,11 +74,36 @@ namespace shikii.VisionJob
             //    cnvs[i] = new Canvas();
             //}
             //如果不是数组
-            //App.thisPowerSuite = this.PrepareToolBlockPowerSuit(CompactDB.FetchValue("Current_Project"), cnvs);
+             //  App.thisPowerSuite = this.PrepareToolBlockPowerSuit(CompactDB.FetchValue("Current_Project"), cnvs);
             //如果是数组
             //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(CompactDB.FetchValue("Current_Project"), cnvs);
-            //to do 添加窗体数量
-            // DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), this.canvasPanel1, 1);
+            //添加窗体
+            DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), this.canvasPanel1, CompactDB.FetchIntValue("DisplayWndNum"));
+        }
+        protected override void prepareCtrls()
+        {
+            base.prepareCtrls();
+            InitializeComponent();
+            DspWndLayoutManager = new dotNetLab.Vision.DspWndLayout();
+
+            cc:;
+            String str = CompactDB.FetchValue("AppName");
+            if (str == null)
+            {
+                CompactDB.Write("AppName", "视觉检测应用");
+                goto cc;
+            }
+            this.Text = str;
+            if (-99999 == CompactDB.FetchIntValue("DisplayWndNum"))
+                CompactDB.Write("DisplayWndNum", "1");
+        
+
+            this.Load += (sender, e) =>
+            {
+                //必须使用这个方法来最大化窗体
+                this.MaxWindow();
+            };
+           
         }
         protected override void prepareEvents()
         {
@@ -121,7 +170,40 @@ namespace shikii.VisionJob
         }
         private void btn_More_Click(object sender, EventArgs e)
         {
-            AppManager.ShowFixedPage(typeof(MenuForm));
+            int n = 0;
+            try
+            {
+                String ApplyUserPriority = CompactDB.FetchValue(App.ApplyUserPriority);
+                n = int.Parse(ApplyUserPriority);
+
+            }
+            catch (Exception ex)
+            {
+
+                Tipper.Error = "检测到你可能启用了权限管理,但是可能配置不正确！";
+            }
+            if (n > 0)
+            {
+                LogInForm logIn = new LogInForm();
+                logIn.ShowDialog();
+                if (!logIn.bCloseWindow)
+                    return;
+            }
+
+            foreach (Form item in Application.OpenForms)
+            {
+                if (item is MenuForm)
+                {
+                    if (item.Owner != this)
+                        return;
+                    if (item.WindowState == FormWindowState.Minimized)
+                        item.WindowState = FormWindowState.Normal;
+                    item.BringToFront();
+                    return;
+                }
+            }
+            Form frm = AppManager.ShowFixedPage(typeof(MenuForm));
+            frm.Owner = this;
         }
 
 

@@ -12,9 +12,15 @@ namespace shikii.VisionJob
        {
            WinFormApp.BegineInvokeApp();
            MainForm frm = new MainForm() ;
-           WinFormApp.EndInvokeApp(frm,frm.mobileListBox1);
+           WinFormApp.EndInvokeApp(frm,frm.PrepareVision,frm.mobileListBox1);
          
          
        }
+        public static String ProjsFolderName = "Projs";
+        public static String OriginProjectPath = "Projs\\0";
+        public static String CurrentProject = "Current_Project";
+        public static String MainCompactDB = "shikii.db";
+        public static string AutoCleanTime = "AutoClearTime";
+        public static String ApplyUserPriority = "ApplyUserPriority";
     }
 }
