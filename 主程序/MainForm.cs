@@ -30,22 +30,30 @@ namespace shikii.VisionJob
         {
             base.prepareData();
 
+            //配置权限
             String str = CompactDB.FetchValue(App.AutoCleanTime);
             if (str == null)
                 CompactDB.Write(App.AutoCleanTime, "0");
             String ApplyUserPriority = CompactDB.FetchValue(App.ApplyUserPriority);
             if (ApplyUserPriority == null)
                 CompactDB.Write(App.ApplyUserPriority, "0");
+
+            //to do 准备通讯处理
+            //提供默认的网络配置窗口，但是只能配置一个TCP/IP对象
             //factoryServer = new TCPFactoryServer();
-
+            //提供默认的网络配置窗口，可以配置多个对象，因为可以为其指定表
+            //factoryServer = new TCPFactoryServer("包含配置信息的表");
+            //启动网络服务
             //factoryServer.Boot();
-
+            //开始轮询
             //factoryServer.Route = (nWhichClient, byts) =>
             //{
-
+                 //写通信逻辑代码
             //};
 
         }
+
+        //检查是否存在默认的项目文件夹
         void CheckProjectFolder()
         {
             if (!Directory.Exists(App.ProjsFolderName))
@@ -64,7 +72,7 @@ namespace shikii.VisionJob
             }
         }
 
-        //准备视觉库
+        // to do 准备视觉库
         public void PrepareVision()
         {
 
@@ -86,7 +94,7 @@ namespace shikii.VisionJob
             //记得给App.CurrentToolBlock赋值
             //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(AbsoluteCurrentProjectPath + "你的vpp名（只包含名称和后缀名）.vpp", cnvs);
             //添加窗体
-            DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), this.canvasPanel1, CompactDB.FetchIntValue("DisplayWndNum"));
+            
         }
         protected override void prepareCtrls()
         {
@@ -104,8 +112,8 @@ namespace shikii.VisionJob
             this.Text = str;
             if (-99999 == CompactDB.FetchIntValue("DisplayWndNum"))
                 CompactDB.Write("DisplayWndNum", "1");
-        
 
+            DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), this.canvasPanel1, CompactDB.FetchIntValue("DisplayWndNum"));
             this.Load += (sender, e) =>
             {
                 //必须使用这个方法来最大化窗体
@@ -136,8 +144,30 @@ namespace shikii.VisionJob
             {
                 this.mobileListBox1.Items.Clear();
             }
+            if(e.KeyData==(Keys.Control|Keys.J))
+            {
+                ShowMenuForm();
+            }
         }
       
+
+        void ShowMenuForm()
+        {
+            foreach (Form item in Application.OpenForms)
+            {
+                if (item is MenuForm)
+                {
+                    if (item.Owner != this)
+                        return;
+                    if (item.WindowState == FormWindowState.Minimized)
+                        item.WindowState = FormWindowState.Normal;
+                    item.BringToFront();
+                    return;
+                }
+            }
+            Form frm = AppManager.ShowFixedPage(typeof(MenuForm));
+            frm.Owner = this;
+        }
         //要使MenuForm 自动清理文本框正常显示请启用下列代码
         protected void AutoSaveClearImage(Bitmap bmp)
         {

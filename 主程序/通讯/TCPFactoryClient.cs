@@ -8,11 +8,16 @@ namespace shikii.VisionJob.通讯
 {
    public class TCPFactoryClient : TCPClient
     {
-        readonly string TCPTABLENAME = "TCP";
+          string TCPTABLENAME = null ;
         // For Decoding Hex String
         byte[] byt_Arr = null;
         public TCPFactoryClient()
         {
+            InitNetArgs("TCP");
+        }
+        void InitNetArgs(string TableName)
+        {
+            this.TCPTABLENAME = TableName;
             byt_Arr = new byte[256];
             this.TextEncode = Encoding.ASCII;
             try
@@ -50,7 +55,10 @@ namespace shikii.VisionJob.通讯
             {
 
             }
-
+        }
+        public TCPFactoryClient(String strTableName)
+        {
+            InitNetArgs(strTableName);
         }
         public bool Send_Mill( byte[] byt_Content)
         {

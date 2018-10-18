@@ -9,7 +9,7 @@ namespace shikii.VisionJob
 {
     public class TCPFactoryServer : XTCPServer
     {
-        readonly string TCPTABLENAME = "TCP";
+          string TCPTABLENAME = null;
          
         public delegate void TCPClientConnectedInvokeCallback(int nExecuteCode);
         public TCPClientConnectedInvokeCallback tcpClientConnectedInvoke;
@@ -17,44 +17,57 @@ namespace shikii.VisionJob
         byte[] byt_Arr = null;
         public TCPFactoryServer()
         {
-            byt_Arr = new byte[256];
-            this.TextEncode = Encoding.ASCII;
-            try
-            {
-                R.CompactDB.GetAllTableNames();
-                if (!R.CompactDB.AllTableNames.Contains(TCPTABLENAME))
-                {
-                    R.CompactDB.CreateKeyValueTable(TCPTABLENAME);
-                }
-               R. CompactDB.TargetTable = TCPTABLENAME;
-                List<String> lst =R. CompactDB.GetNameColumnValues(R.CompactDB.TargetTable);
-                if (lst.Count == 0)
-                {
-                    R.Pipe.Error("读取网络配置时失败，将增加新记录");
-                }
-                if (!lst.Contains("Port"))
-                {
-                    R.CompactDB.Write("Port", "8040");
-                }
-                if (!lst.Contains("LoopGapTime"))
-                {
-                    R.CompactDB.Write("LoopGapTime", "500");
-                }
-                if (!lst.Contains("IP"))
-                {
-                    R.CompactDB.Write("IP", "127.0.0.1");
-                }
-                Port = int.Parse(R.CompactDB.FetchValue("Port"));
-                LoopGapTime = int.Parse(R.CompactDB.FetchValue("LoopGapTime"));
-                IP = R.CompactDB.FetchValue("IP");
-                R.CompactDB.TargetTable = R.CompactDB.DefaultTable;
-
-            }
-            catch (Exception ex)
-            {
-
-            }
+            InitNetArgs("TCP");
           
+        }
+        public TCPFactoryServer(String strTableName)
+        {
+            InitNetArgs(strTableName);
+
+        }
+          void InitNetArgs(String strTableName)
+        {
+
+            TCPTABLENAME = strTableName;
+                byt_Arr = new byte[256];
+                this.TextEncode = Encoding.ASCII;
+                try
+                {
+                    R.CompactDB.GetAllTableNames();
+                    if (!R.CompactDB.AllTableNames.Contains(TCPTABLENAME))
+                    {
+                        R.CompactDB.CreateKeyValueTable(TCPTABLENAME);
+                    }
+                    R.CompactDB.TargetTable = TCPTABLENAME;
+                    List<String> lst = R.CompactDB.GetNameColumnValues(R.CompactDB.TargetTable);
+                    if (lst.Count == 0)
+                    {
+                        R.Pipe.Error("读取网络配置时失败，将增加新记录");
+                    }
+                    if (!lst.Contains("Port"))
+                    {
+                        R.CompactDB.Write("Port", "8040");
+                    }
+                    if (!lst.Contains("LoopGapTime"))
+                    {
+                        R.CompactDB.Write("LoopGapTime", "500");
+                    }
+                    if (!lst.Contains("IP"))
+                    {
+                        R.CompactDB.Write("IP", "127.0.0.1");
+                    }
+                    Port = int.Parse(R.CompactDB.FetchValue("Port"));
+                    LoopGapTime = int.Parse(R.CompactDB.FetchValue("LoopGapTime"));
+                    IP = R.CompactDB.FetchValue("IP");
+                    R.CompactDB.TargetTable = R.CompactDB.DefaultTable;
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+             
         }
         public bool Send_Mill(String strClientID, byte[] byt_Content)
         {

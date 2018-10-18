@@ -9,9 +9,11 @@ namespace shikii.VisionJob
 {
     public class TCPNetConnectForm : dotNetLab.Common.ModernUI.SessionPage
     {
-        readonly string TCPTABLENAME = "TCP";
-        readonly string SERIALPORTTABLENAME = "SerialPort";
-    
+      public    string TCPTABLENAME = "TCP";
+       readonly string SERIALPORTTABLENAME = "SerialPort";
+       
+   
+
         protected override void prepareCtrls()
         {
             base.prepareCtrls();
@@ -139,7 +141,7 @@ namespace shikii.VisionJob
             uiElementBinderInfo1.ThisControl = this.mobileTextBox3;
             this.mobileTextBox3.DataBindingInfo = uiElementBinderInfo1;
             this.mobileTextBox3.DoubleValue = double.NaN;
-            this.mobileTextBox3.EnableMobileRound = true;
+            this.mobileTextBox3.EnableMobileRound = false;
             this.mobileTextBox3.EnableNullValue = false;
             this.mobileTextBox3.FillColor = System.Drawing.Color.Transparent;
             this.mobileTextBox3.FloatValue = float.NaN;
@@ -151,9 +153,9 @@ namespace shikii.VisionJob
             this.mobileTextBox3.Location = new System.Drawing.Point(187, 130);
             this.mobileTextBox3.MainBindableProperty = "";
             this.mobileTextBox3.Name = "mobileTextBox3";
-            this.mobileTextBox3.Radius = 29;
+            this.mobileTextBox3.Radius = -1;
             this.mobileTextBox3.Size = new System.Drawing.Size(187, 30);
-            this.mobileTextBox3.StaticColor = System.Drawing.Color.Gray;
+            this.mobileTextBox3.StaticColor = System.Drawing.Color.DodgerBlue;
             this.mobileTextBox3.TabIndex = 7;
             this.mobileTextBox3.TextAlignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.mobileTextBox3.TextBackColor = System.Drawing.Color.Snow;
@@ -176,7 +178,7 @@ namespace shikii.VisionJob
             uiElementBinderInfo2.ThisControl = this.mobileTextBox1;
             this.mobileTextBox1.DataBindingInfo = uiElementBinderInfo2;
             this.mobileTextBox1.DoubleValue = double.NaN;
-            this.mobileTextBox1.EnableMobileRound = true;
+            this.mobileTextBox1.EnableMobileRound = false;
             this.mobileTextBox1.EnableNullValue = false;
             this.mobileTextBox1.FillColor = System.Drawing.Color.Transparent;
             this.mobileTextBox1.FloatValue = float.NaN;
@@ -188,9 +190,9 @@ namespace shikii.VisionJob
             this.mobileTextBox1.Location = new System.Drawing.Point(187, 42);
             this.mobileTextBox1.MainBindableProperty = "";
             this.mobileTextBox1.Name = "mobileTextBox1";
-            this.mobileTextBox1.Radius = 29;
+            this.mobileTextBox1.Radius = -1;
             this.mobileTextBox1.Size = new System.Drawing.Size(187, 30);
-            this.mobileTextBox1.StaticColor = System.Drawing.Color.Gray;
+            this.mobileTextBox1.StaticColor = System.Drawing.Color.DodgerBlue;
             this.mobileTextBox1.TabIndex = 8;
             this.mobileTextBox1.TextAlignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.mobileTextBox1.TextBackColor = System.Drawing.Color.Snow;
@@ -213,7 +215,7 @@ namespace shikii.VisionJob
             uiElementBinderInfo3.ThisControl = this.mobileTextBox2;
             this.mobileTextBox2.DataBindingInfo = uiElementBinderInfo3;
             this.mobileTextBox2.DoubleValue = double.NaN;
-            this.mobileTextBox2.EnableMobileRound = true;
+            this.mobileTextBox2.EnableMobileRound = false;
             this.mobileTextBox2.EnableNullValue = false;
             this.mobileTextBox2.FillColor = System.Drawing.Color.Transparent;
             this.mobileTextBox2.FloatValue = float.NaN;
@@ -225,9 +227,9 @@ namespace shikii.VisionJob
             this.mobileTextBox2.Location = new System.Drawing.Point(187, 87);
             this.mobileTextBox2.MainBindableProperty = "";
             this.mobileTextBox2.Name = "mobileTextBox2";
-            this.mobileTextBox2.Radius = 29;
+            this.mobileTextBox2.Radius = -1;
             this.mobileTextBox2.Size = new System.Drawing.Size(187, 30);
-            this.mobileTextBox2.StaticColor = System.Drawing.Color.Gray;
+            this.mobileTextBox2.StaticColor = System.Drawing.Color.DodgerBlue;
             this.mobileTextBox2.TabIndex = 9;
             this.mobileTextBox2.TextAlignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.mobileTextBox2.TextBackColor = System.Drawing.Color.Snow;

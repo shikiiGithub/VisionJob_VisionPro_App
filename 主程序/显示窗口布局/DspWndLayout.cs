@@ -36,7 +36,6 @@ namespace dotNetLab
                 }
                 return dspWndArr;
             }
-
             public void PrepareDspWnds(Type type_DspWnd,Control What_Panel_Do_You_Want_To_Place_DisplayWnds,int nHowDspWnds)
             {
                 this.type_DspWnd = type_DspWnd;
@@ -87,6 +86,8 @@ namespace dotNetLab
                 }
             }
         }
+
+         
     }
 }
 

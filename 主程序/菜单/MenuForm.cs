@@ -125,18 +125,14 @@ namespace shikii.VisionJob
                 App.frm.PrepareVision();
             };
         }
-
-
-
-
         //to do 请在MenuForm 添加LinkButton
         // 显示ToolBlock
         public void ShowCognexQuickBuildPart(ToolBlockPowerSuite ThisToolBlockPowerSuite)
         {
             PatternForm frm = new PatternForm();
-            frm.PrepareToolBlockEditor(frm.editDapter, ThisToolBlockPowerSuite.ThisToolBlock, ThisToolBlockPowerSuite.ThisToolBlock, ThisToolBlockPowerSuite.VppName);
-            Localize lc = new Localize();
-            lc.LocalizeToolBlock(frm.editDapter.toolBox);
+            frm.PrepareToolBlockEditor(frm.editDapter, ThisToolBlockPowerSuite.ThisToolBlock, 
+                ThisToolBlockPowerSuite.ThisToolBlock, ThisToolBlockPowerSuite.VppName);
+
             frm.FormClosed += (s, ex) =>
             {
                 frm.Dispose();
@@ -703,10 +699,6 @@ namespace shikii.VisionJob
 
         }
 
-        private void textBlock7_Click(object sender, EventArgs e)
-        {
-
-        }
         
         private void lnk_ManualRun_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {

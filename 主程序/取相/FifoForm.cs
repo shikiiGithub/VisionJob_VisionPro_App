@@ -5,6 +5,7 @@ using System.Text;
 using dotNetLab.Common.ModernUI;
 using Cognex.VisionPro.Implementation;
 using Cognex.VisionPro.Display;
+using Cognex.VisionPro;
 
 namespace shikii.VisionJob
 {
@@ -23,37 +24,45 @@ namespace shikii.VisionJob
             DspWndLayoutManager = new dotNetLab.Vision.DspWndLayout();
             ArrangeDspWnds();
             AttachFifoTool();
-            BindLiveDeviceNames();
+             
         }
       
+        //准备显示窗体
         private void ArrangeDspWnds()
         {
-            
+            //to do  显示窗体数量
+            int nDspWnds = 1 ;
+            DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), 
+                this.canvasPanel1, nDspWnds);
+            //to do 给comboBox1赋值
+            comboBox1.Items.AddRange(new object[] 
+            {
+
+            });
         }
         protected void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             LiveDisplay(comboBox1.Text);
         }
-
+        //将AcqFifoTool 赋值给DspWndLayoutManager.DisplayWnds[i++].Tag 
         public void AttachFifoTool()
         {
-
+            int i = 0;
+            // to do 为显示窗体的Tag 赋值AcqFifoTool
+            DspWndLayoutManager.DisplayWnds[i++].Tag = "ToolBlock 中的AcqFifoTool";
         }
-
-        public void BindLiveDeviceNames()
-        {
-
-        }
-
         public void LiveDisplay(string str)
         {
-            if(!string.IsNullOrEmpty(str))
-            {
+            //to do 请将下列代码启用
+            //if(!string.IsNullOrEmpty(str))
+            //{
+            //    switch (str)
+            //    {
+            //        case  " ":  (DspWndLayoutManager.DisplayWnds[] as CogDisplay).StartLiveDisplay(DspWndLayoutManager.DisplayWnds[].Tag, true); break;
+
+            //    }
                 
-                //dct_Fifos[str]
-                //CogDisplay cogDisplay;
-                //cogDisplay.StartLiveDisplay(dct_Fifos[str], true);
-            }
+            //}
         }
 
 

@@ -18,8 +18,6 @@ namespace shikii.VisionJob
            WinFormApp.BegineInvokeApp();
              frm = new MainForm() ;
            WinFormApp.EndInvokeApp(frm,frm.PrepareVision,frm.mobileListBox1);
-         
-         
        }
         public static String ProjsFolderName = "Projs";
         public static String OriginProjectPath = "Projs\\0";
