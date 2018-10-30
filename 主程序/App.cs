@@ -10,6 +10,7 @@ namespace shikii.VisionJob
 
 
         //to do  记录各VPP的路径,定义各个VPP对应用的ToolBlockPowerSuite
+        public static ToolBlockPowerSuite thisToolBlockSuite;
         public static MainForm frm;
 
         [STAThread]

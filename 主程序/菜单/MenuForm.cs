@@ -177,10 +177,12 @@ namespace shikii.VisionJob
         private LinkLabel lnk_UseDataCenter;
         private Label label3;
         private Toggle cbx_ApplyPriority;
+        private LinkLabel linkLabel1;
         private dotNetLab.Widgets.ColorDecorator colorDecorator1;
         private void InitializeComponent()
         {
             dotNetLab.Widgets.UIBinding.UIElementBinderInfo uiElementBinderInfo1 = new dotNetLab.Widgets.UIBinding.UIElementBinderInfo();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MenuForm));
             this.mobileTextBox4 = new dotNetLab.Widgets.MobileTextBox();
             this.colorDecorator1 = new dotNetLab.Widgets.ColorDecorator();
             this.card2 = new dotNetLab.Widgets.Card();
@@ -204,6 +206,7 @@ namespace shikii.VisionJob
             this.textBlock4 = new dotNetLab.Widgets.TextBlock();
             this.textBlock3 = new dotNetLab.Widgets.TextBlock();
             this.textBlock1 = new dotNetLab.Widgets.TextBlock();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.card2.SuspendLayout();
             this.card1.SuspendLayout();
             this.SuspendLayout();
@@ -261,6 +264,7 @@ namespace shikii.VisionJob
             this.card2.BackColor = System.Drawing.Color.Transparent;
             this.card2.BorderColor = System.Drawing.Color.Gray;
             this.card2.BorderThickness = 0;
+            this.card2.Controls.Add(this.linkLabel1);
             this.card2.Controls.Add(this.label3);
             this.card2.Controls.Add(this.cbx_ApplyPriority);
             this.card2.Controls.Add(this.lnk_UseDataCenter);
@@ -279,7 +283,7 @@ namespace shikii.VisionJob
             this.card2.HeadHeight = 30;
             this.card2.ImagePos = new System.Drawing.Point(0, 0);
             this.card2.ImageSize = new System.Drawing.Size(0, 0);
-            this.card2.Location = new System.Drawing.Point(318, 77);
+            this.card2.Location = new System.Drawing.Point(327, 77);
             this.card2.MainBindableProperty = "card1";
             this.card2.Name = "card2";
             this.card2.NormalColor = System.Drawing.Color.Snow;
@@ -680,9 +684,21 @@ namespace shikii.VisionJob
             this.textBlock1.Vertical = false;
             this.textBlock1.WhereReturn = ((byte)(0));
             // 
+            // linkLabel1
+            // 
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.Location = new System.Drawing.Point(75, 78);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(82, 20);
+            this.linkLabel1.TabIndex = 10;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "linkLabel1";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
             // MenuForm
             // 
             this.ClientSize = new System.Drawing.Size(600, 500);
+            this.ClipboardText = resources.GetString("$this.ClipboardText");
             this.Controls.Add(this.card2);
             this.Controls.Add(this.card1);
             this.Controls.Add(this.colorDecorator1);
@@ -719,6 +735,11 @@ namespace shikii.VisionJob
             {
                 CompactDB.Write(App.ApplyUserPriority, "0");
             }
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            ShowCognexQuickBuildPart(App.thisToolBlockSuite);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace shikii.VisionJob
 
        // 显示相关信息请启用下列代码
         //  Canvas[] cnvs;
-        //  Canvas cnvs;
+         Canvas cnvs;
         TCPFactoryServer factoryServer;
         public  dotNetLab.Vision.DspWndLayout DspWndLayoutManager;
 
@@ -80,7 +80,7 @@ namespace shikii.VisionJob
             String currentProjectShortPath = CompactDB.FetchValue("Current_Project");
             String AbsoluteCurrentProjectPath = Path.Combine(ThisAppDir, currentProjectShortPath);
             //如果不是数组
-           //  cnvs = new Canvas();
+             cnvs = new Canvas();
             //如果是数组，一个 Canvas 对象对应一个显示窗口
             //cnvs = new Canvas[n];
             //for (int i = 0; i < cnvs.Length; i++)
@@ -89,12 +89,13 @@ namespace shikii.VisionJob
             //}
             //如果不是数组，如果多个vpp 则定义多个,
             //记得给App.CurrentToolBlock赋值
-              // App.thisPowerSuite = this.PrepareToolBlockPowerSuit(AbsoluteCurrentProjectPath + "你的vpp名（只包含名称和后缀名）.vpp", cnvs);
+               App.thisToolBlockSuite = this.PrepareToolBlockPowerSuit(AbsoluteCurrentProjectPath, cnvs);
+       
             //如果是数组，，如果多个vpp 则定义多个,
             //记得给App.CurrentToolBlock赋值
             //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(AbsoluteCurrentProjectPath + "你的vpp名（只包含名称和后缀名）.vpp", cnvs);
             //添加窗体
-            
+
         }
         protected override void prepareCtrls()
         {
