@@ -117,13 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="$this.ClipboardText" xml:space="preserve">
-    <value>   Button btn = new Button();
-               btn.Font = new Font("微软雅黑", 11);
-               btn.Text = "工具箱";
-               btn.Click += (sender, e) =&gt;
-               {
-                   GetToolBoxForm(sender, typeof(CHSVisionToolBox));
-               };</value>
-  </data>
 </root>

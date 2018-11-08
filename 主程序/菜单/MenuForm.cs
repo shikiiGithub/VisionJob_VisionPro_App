@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Cognex.VisionPro.PMAlign;
+using System.Reflection;
 
 namespace shikii.VisionJob
 {
@@ -178,14 +180,15 @@ namespace shikii.VisionJob
         private Label label3;
         private Toggle cbx_ApplyPriority;
         private LinkLabel linkLabel1;
+        private LinkLabel linkLabel2;
         private dotNetLab.Widgets.ColorDecorator colorDecorator1;
         private void InitializeComponent()
         {
-            dotNetLab.Widgets.UIBinding.UIElementBinderInfo uiElementBinderInfo1 = new dotNetLab.Widgets.UIBinding.UIElementBinderInfo();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MenuForm));
+            dotNetLab.Widgets.UIBinding.UIElementBinderInfo uiElementBinderInfo2 = new dotNetLab.Widgets.UIBinding.UIElementBinderInfo();
             this.mobileTextBox4 = new dotNetLab.Widgets.MobileTextBox();
             this.colorDecorator1 = new dotNetLab.Widgets.ColorDecorator();
             this.card2 = new dotNetLab.Widgets.Card();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.label3 = new System.Windows.Forms.Label();
             this.cbx_ApplyPriority = new dotNetLab.Widgets.Toggle();
             this.lnk_UseDataCenter = new System.Windows.Forms.LinkLabel();
@@ -206,7 +209,7 @@ namespace shikii.VisionJob
             this.textBlock4 = new dotNetLab.Widgets.TextBlock();
             this.textBlock3 = new dotNetLab.Widgets.TextBlock();
             this.textBlock1 = new dotNetLab.Widgets.TextBlock();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             this.card2.SuspendLayout();
             this.card1.SuspendLayout();
             this.SuspendLayout();
@@ -215,16 +218,16 @@ namespace shikii.VisionJob
             // 
             this.mobileTextBox4.ActiveColor = System.Drawing.Color.Cyan;
             this.mobileTextBox4.BackColor = System.Drawing.Color.Transparent;
-            uiElementBinderInfo1.DBEngineIndex = 0;
-            uiElementBinderInfo1.EnableCheckBox_One_Zero = false;
-            uiElementBinderInfo1.FieldName = "Val";
-            uiElementBinderInfo1.Filter = "Name=\'AutoClearTime\' ";
-            uiElementBinderInfo1.Ptr = null;
-            uiElementBinderInfo1.StoreInDB = true;
-            uiElementBinderInfo1.StoreIntoDBRealTime = true;
-            uiElementBinderInfo1.TableName = "App_Extension_Data_Table";
-            uiElementBinderInfo1.ThisControl = this.mobileTextBox4;
-            this.mobileTextBox4.DataBindingInfo = uiElementBinderInfo1;
+            uiElementBinderInfo2.DBEngineIndex = 0;
+            uiElementBinderInfo2.EnableCheckBox_One_Zero = false;
+            uiElementBinderInfo2.FieldName = "Val";
+            uiElementBinderInfo2.Filter = "Name=\'AutoClearTime\' ";
+            uiElementBinderInfo2.Ptr = null;
+            uiElementBinderInfo2.StoreInDB = true;
+            uiElementBinderInfo2.StoreIntoDBRealTime = true;
+            uiElementBinderInfo2.TableName = "App_Extension_Data_Table";
+            uiElementBinderInfo2.ThisControl = this.mobileTextBox4;
+            this.mobileTextBox4.DataBindingInfo = uiElementBinderInfo2;
             this.mobileTextBox4.DoubleValue = double.NaN;
             this.mobileTextBox4.EnableMobileRound = true;
             this.mobileTextBox4.EnableNullValue = false;
@@ -264,6 +267,7 @@ namespace shikii.VisionJob
             this.card2.BackColor = System.Drawing.Color.Transparent;
             this.card2.BorderColor = System.Drawing.Color.Gray;
             this.card2.BorderThickness = 0;
+            this.card2.Controls.Add(this.linkLabel2);
             this.card2.Controls.Add(this.linkLabel1);
             this.card2.Controls.Add(this.label3);
             this.card2.Controls.Add(this.cbx_ApplyPriority);
@@ -293,6 +297,17 @@ namespace shikii.VisionJob
             this.card2.TabIndex = 2;
             this.card2.Text = "card1";
             this.card2.UIElementBinders = null;
+            // 
+            // linkLabel1
+            // 
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.Location = new System.Drawing.Point(75, 78);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(82, 20);
+            this.linkLabel1.TabIndex = 10;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "linkLabel1";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
             // label3
             // 
@@ -684,21 +699,20 @@ namespace shikii.VisionJob
             this.textBlock1.Vertical = false;
             this.textBlock1.WhereReturn = ((byte)(0));
             // 
-            // linkLabel1
+            // linkLabel2
             // 
-            this.linkLabel1.AutoSize = true;
-            this.linkLabel1.Location = new System.Drawing.Point(75, 78);
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(82, 20);
-            this.linkLabel1.TabIndex = 10;
-            this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "linkLabel1";
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            this.linkLabel2.AutoSize = true;
+            this.linkLabel2.Location = new System.Drawing.Point(75, 119);
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.Size = new System.Drawing.Size(82, 20);
+            this.linkLabel2.TabIndex = 10;
+            this.linkLabel2.TabStop = true;
+            this.linkLabel2.Text = "linkLabel1";
+            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
             // 
             // MenuForm
             // 
             this.ClientSize = new System.Drawing.Size(600, 500);
-            this.ClipboardText = resources.GetString("$this.ClipboardText");
             this.Controls.Add(this.card2);
             this.Controls.Add(this.card1);
             this.Controls.Add(this.colorDecorator1);
@@ -741,5 +755,11 @@ namespace shikii.VisionJob
         {
             ShowCognexQuickBuildPart(App.thisToolBlockSuite);
         }
+
+        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+           
+        }
+      
     }
 }

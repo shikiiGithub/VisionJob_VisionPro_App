@@ -12,8 +12,8 @@ using Cognex.VisionPro.Blob;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
- 
 using dotNetLab;
+using Cognex.VisionPro.ToolBlock;
 
 namespace shikii.VisionJob
 {
@@ -25,7 +25,7 @@ namespace shikii.VisionJob
          Canvas cnvs;
         TCPFactoryServer factoryServer;
         public  dotNetLab.Vision.DspWndLayout DspWndLayoutManager;
-
+     
         protected override void prepareData()
         {
             base.prepareData();
@@ -81,20 +81,29 @@ namespace shikii.VisionJob
             String AbsoluteCurrentProjectPath = Path.Combine(ThisAppDir, currentProjectShortPath);
             //如果不是数组
              cnvs = new Canvas();
+            cnvs.ThisForm = this;
+            cnvs.ThisDspWnd = DspWndLayoutManager.DisplayWnds[0];
             //如果是数组，一个 Canvas 对象对应一个显示窗口
             //cnvs = new Canvas[n];
             //for (int i = 0; i < cnvs.Length; i++)
             //{
             //    cnvs[i] = new Canvas();
+            //    cnvs[i].ThisForm = this;
+            //    cnvs[i].ThisDspWnd = DspWndLayoutManager.DisplayWnds[i];
             //}
             //如果不是数组，如果多个vpp 则定义多个,
             //记得给App.CurrentToolBlock赋值
-               App.thisToolBlockSuite = this.PrepareToolBlockPowerSuit(AbsoluteCurrentProjectPath, cnvs);
-       
+            App.thisToolBlockSuite = this.PrepareToolBlockPowerSuit(AbsoluteCurrentProjectPath, cnvs);
+
             //如果是数组，，如果多个vpp 则定义多个,
             //记得给App.CurrentToolBlock赋值
             //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(AbsoluteCurrentProjectPath + "你的vpp名（只包含名称和后缀名）.vpp", cnvs);
             //添加窗体
+           
+        }
+        //用于调试VisionPro 脚本
+        public void DegbugVPROScript(ICogTool tool,bool isBeforeRunTool)
+        {
 
         }
         protected override void prepareCtrls()
@@ -150,10 +159,13 @@ namespace shikii.VisionJob
                 ShowMenuForm();
             }
         }
-      
 
         void ShowMenuForm()
         {
+           
+
+                 //ToolBlockPowerSuite.DisplayResultImage
+                 //       (App.DspWndLayoutManager.DisplayWnds[0] as CogRecordDisplay, ir, cnv)
             foreach (Form item in Application.OpenForms)
             {
                 if (item is MenuForm)
@@ -168,6 +180,26 @@ namespace shikii.VisionJob
             }
             Form frm = AppManager.ShowFixedPage(typeof(MenuForm));
             frm.Owner = this;
+        }
+
+        //运行ToolBlock 之后，需要处理些事情
+        // Outputs 即VisionPro 上的Outputs(即‘输出’)
+        //如果有多个窗体，那么可以通过 cnvs.IndexOf(cnv);来获得窗体的索引
+        //然后判断是哪个窗体来分类处理
+        public void RanToolBlock(Canvas cnv,ICogRecord irc,Object Outputs)
+        {
+            //显示处理结果
+            cnv.Display(irc);
+
+
+
+        }
+        //运行某个ToolBlock 
+        public virtual void Run(ToolBlockPowerSuite toolBlockPowerSuite,
+            String _strOutputImageRecord, Canvas cnv, 
+            params object[] Inputs)
+        {
+            toolBlockPowerSuite.Run(_strOutputImageRecord, cnv, RanToolBlock, Inputs);
         }
         //要使MenuForm 自动清理文本框正常显示请启用下列代码
         protected void AutoSaveClearImage(Bitmap bmp)
@@ -402,6 +434,7 @@ namespace shikii.VisionJob
             this.ResumeLayout(false);
 
         }
+       
     }
 }
 
