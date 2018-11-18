@@ -30,5 +30,6 @@ namespace shikii.VisionJob
         public static String MainCompactDB = "shikii.db";
         public static string AutoCleanTime = "AutoClearTime";
         public static String ApplyUserPriority = "ApplyUserPriority";
+        public static String HideMainForm = "HideMainForm";
     }
 }

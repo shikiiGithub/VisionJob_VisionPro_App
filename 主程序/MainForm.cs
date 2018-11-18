@@ -37,7 +37,9 @@ namespace shikii.VisionJob
             String ApplyUserPriority = CompactDB.FetchValue(App.ApplyUserPriority);
             if (ApplyUserPriority == null)
                 CompactDB.Write(App.ApplyUserPriority, "0");
-
+            String HideMainForm = CompactDB.FetchValue(App.HideMainForm);
+            if (HideMainForm == null)
+                CompactDB.Write(App.HideMainForm, "0");
             //to do 准备通讯处理
             //提供默认的网络配置窗口，但是只能配置一个TCP/IP对象
             //factoryServer = new TCPFactoryServer();
@@ -48,7 +50,7 @@ namespace shikii.VisionJob
             //开始轮询
             //factoryServer.Route = (nWhichClient, byts) =>
             //{
-                 //写通信逻辑代码
+            //写通信逻辑代码
             //};
 
         }
@@ -105,6 +107,28 @@ namespace shikii.VisionJob
         public void DegbugVPROScript(ICogTool tool,bool isBeforeRunTool)
         {
 
+        }
+
+        public Form ShowQuickBuildForm()
+        {
+            String HideMainForm = CompactDB.FetchValue(App.HideMainForm);
+            if (HideMainForm == "1")
+            {
+
+                 
+                Form frm = AppManager.ShowFixedPage(typeof(MenuForm));
+                frm.Owner = this;
+
+                frm.FormClosed += (sender, e) =>
+                {
+                    this.Close();
+                };
+                return frm;
+            }
+            else
+            {
+                return this;
+            }
         }
         protected override void prepareCtrls()
         {
