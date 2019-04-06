@@ -4,7 +4,6 @@ using Cognex.VisionPro.ToolBlock;
 using dotNetLab;
 using dotNetLab.Common;
 using dotNetLab.Common.ModernUI;
-using dotNetLab.Data;
 using dotNetLab.Data.Network;
 using dotNetLab.Data.Uniting;
 using dotNetLab.Network;
@@ -14,7 +13,7 @@ using dotNetLab.Widgets;
 using dotNetLab.Widgets.Container;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -26,10 +25,7 @@ namespace shikii.VisionJob
 	public class MainForm : PageBase
 	{
 		 
-
-	 
-
-		private string CurrentMakeupTableName = null;
+		 
 
 		private static object LockHardwareTrigger = new object();
 
@@ -73,12 +69,15 @@ namespace shikii.VisionJob
 
 		public void PrepareCanvases()
 		{
-			CogGraphicLabel cogGraphicLabel = App.ThisJobTool.cnvs[0].AddDisplayLabel(30, 50);
-			cogGraphicLabel.Color = CogColorConstants.Yellow;
+
+			
+
 			try
 			{
-				CurrentMakeupTableName = string.Format("X{0}_Makeup", App.GetShortProjectName());
-				base.CompactDB.CreateKeyValueTable(CurrentMakeupTableName);
+                CogGraphicLabel cogGraphicLabel = App.ThisJobTool.cnvs[0].AddDisplayLabel(30, 50);
+                cogGraphicLabel.Color = CogColorConstants.Yellow;
+    //            CurrentMakeupTableName = string.Format("X{0}_Makeup", App.GetShortProjectName());
+				//base.CompactDB.CreateKeyValueTable(CurrentMakeupTableName);
 			}
 			catch (Exception)
 			{
