@@ -1,582 +1,1014 @@
-﻿using System;
-using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
-using dotNetLab.Common.ModernUI;
-using dotNetLab.Common;
-using System.Threading;
-using dotNetLab.Vision.VPro;
 using Cognex.VisionPro;
-using Cognex.VisionPro.PMAlign;
-using Cognex.VisionPro.Blob;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.IO;
-using dotNetLab;
+using Cognex.VisionPro.FGGigE.Implementation.Internal;
 using Cognex.VisionPro.ToolBlock;
+using dotNetLab;
+using dotNetLab.Common;
+using dotNetLab.Common.ModernUI;
+using dotNetLab.Data;
+using dotNetLab.Data.Network;
+using dotNetLab.Data.Uniting;
+using dotNetLab.Network;
+using dotNetLab.Vision;
+using dotNetLab.Vision.VPro;
+using dotNetLab.Widgets;
+using dotNetLab.Widgets.Container;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace shikii.VisionJob
 {
-    public partial class MainForm : dotNetLab.Common.ModernUI.PageBase
-    {
+	public class MainForm : PageBase
+	{
+		 
 
-       // 显示相关信息请启用下列代码
-        //  Canvas[] cnvs;
-         Canvas cnvs;
-        TCPFactoryServer factoryServer;
-        public  dotNetLab.Vision.DspWndLayout DspWndLayoutManager;
-     
-        protected override void prepareData()
-        {
-            base.prepareData();
+	 
 
-            //配置权限
-            String str = CompactDB.FetchValue(App.AutoCleanTime);
-            if (str == null)
-                CompactDB.Write(App.AutoCleanTime, "0");
-            String ApplyUserPriority = CompactDB.FetchValue(App.ApplyUserPriority);
-            if (ApplyUserPriority == null)
-                CompactDB.Write(App.ApplyUserPriority, "0");
-            String HideMainForm = CompactDB.FetchValue(App.HideMainForm);
-            if (HideMainForm == null)
-                CompactDB.Write(App.HideMainForm, "0");
-            //to do 准备通讯处理
-            //提供默认的网络配置窗口，但是只能配置一个TCP/IP对象
-            //factoryServer = new TCPFactoryServer();
-            //提供默认的网络配置窗口，可以配置多个对象，因为可以为其指定表
-            //factoryServer = new TCPFactoryServer("包含配置信息的表");
-            //启动网络服务
-            //factoryServer.Boot();
-            //开始轮询
-            //factoryServer.Route = (nWhichClient, byts) =>
-            //{
-            //写通信逻辑代码
-            //};
+		private string CurrentMakeupTableName = null;
 
-        }
+		private static object LockHardwareTrigger = new object();
 
-        //检查是否存在默认的项目文件夹
-        void CheckProjectFolder()
-        {
-            if (!Directory.Exists(App.ProjsFolderName))
-            {
-                Directory.CreateDirectory(App.ProjsFolderName);
-                if (!Directory.Exists(App.OriginProjectPath))
-                {
-                    Directory.CreateDirectory(App.OriginProjectPath);
-                    String str = CompactDB.FetchValue(App.CurrentProject);
-                    if (String.IsNullOrEmpty(str) || str.Equals("0"))
-                    {
-                        CompactDB.Write(App.CurrentProject, App.OriginProjectPath);
-                    }
-                }
+		private static object LockSoftwareTrigger = new object();
 
-            }
-        }
+		private ICogAcqInfo info = null;
 
-        // to do 准备视觉库
-        public void PrepareVision()
-        {
+		public EventHandler AutoTriggerHandler = null;
 
-            String ThisAppDir = Path.GetDirectoryName(Application.ExecutablePath);
-            String currentProjectShortPath = CompactDB.FetchValue("Current_Project");
-            String AbsoluteCurrentProjectPath = Path.Combine(ThisAppDir, currentProjectShortPath);
-            //如果不是数组
-             cnvs = new Canvas();
-            cnvs.ThisForm = this;
-            cnvs.ThisDspWnd = DspWndLayoutManager.DisplayWnds[0];
-            //如果是数组，一个 Canvas 对象对应一个显示窗口
-            //cnvs = new Canvas[n];
-            //for (int i = 0; i < cnvs.Length; i++)
-            //{
-            //    cnvs[i] = new Canvas();
-            //    cnvs[i].ThisForm = this;
-            //    cnvs[i].ThisDspWnd = DspWndLayoutManager.DisplayWnds[i];
-            //}
-            //如果不是数组，如果多个vpp 则定义多个,
-            //记得给App.CurrentToolBlock赋值
-            App.thisToolBlockSuite = this.PrepareToolBlockPowerSuit(AbsoluteCurrentProjectPath, cnvs);
+		private TextBlock textBlock6;
 
-            //如果是数组，，如果多个vpp 则定义多个,
-            //记得给App.CurrentToolBlock赋值
-            //App.thisPowerSuite = this.PrepareToolBlockPowerSuitEx(AbsoluteCurrentProjectPath + "你的vpp名（只包含名称和后缀名）.vpp", cnvs);
-            //添加窗体
-           
-        }
-        //用于调试VisionPro 脚本
-        public void DegbugVPROScript(ICogTool tool,bool isBeforeRunTool)
-        {
+		private TextBlock lbl_GoodPercent;
 
-        }
+		private TextBlock textBlock4;
 
-        public Form ShowQuickBuildForm()
-        {
-            String HideMainForm = CompactDB.FetchValue(App.HideMainForm);
-            if (HideMainForm == "1")
-            {
+		private TextBlock lbl_NGNum;
 
-                 
-                Form frm = AppManager.ShowFixedPage(typeof(MenuForm));
-                frm.Owner = this;
+		private TextBlock textBlock2;
 
-                frm.FormClosed += (sender, e) =>
-                {
-                    this.Close();
-                };
-                return frm;
-            }
-            else
-            {
-                return this;
-            }
-        }
-        protected override void prepareCtrls()
-        {
-            base.prepareCtrls();
-            InitializeComponent();
-            DspWndLayoutManager = new dotNetLab.Vision.DspWndLayout();
+		private TextBlock lbl_TotalNum;
 
-            cc:;
-            String str = CompactDB.FetchValue("AppName");
-            if (str == null)
-            {
-                CompactDB.Write("AppName", "视觉检测应用");
-                goto cc;
-            }
-            this.Text = str;
-            if (-99999 == CompactDB.FetchIntValue("DisplayWndNum"))
-                CompactDB.Write("DisplayWndNum", "1");
+		public DspWndLayout DspWndLayoutManager;
 
-            DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), this.canvasPanel1, CompactDB.FetchIntValue("DisplayWndNum"));
-            this.Load += (sender, e) =>
-            {
-                //必须使用这个方法来最大化窗体
-                this.MaxWindow();
-            };
-           
-        }
-        protected override void prepareEvents()
-        {
-            base.prepareEvents();
-            this.KeyDown += MainForm_KeyDown;
-            this.EnableDrawUpDownPattern = true;
-            this.Img_Up = dotNetLab.UI.RibbonSpring;
-            this.Img_Down = dotNetLab.UI.RibbonUnderwater;
-            this.FormClosing += (s, e) =>
-            {
-                Process.GetCurrentProcess().Kill();
-            };
-        }
+		private TextBlock lbl_OutputInfo;
 
-        private void MainForm_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyData == (Keys.Control | Keys.S))
-            {
-               // MainCheckLEDSupporting();
-            }
-            if (e.KeyData == (Keys.Control | Keys.C))
-            {
-                this.mobileListBox1.Items.Clear();
-            }
-            if(e.KeyData==(Keys.Control|Keys.J))
-            {
-                ShowMenuForm();
-            }
-        }
+		private CanvasPanel canvasPanel1;
 
-        void ShowMenuForm()
-        {
-           
+		private ColorDecorator colorDecorator1;
 
-                 //ToolBlockPowerSuite.DisplayResultImage
-                 //       (App.DspWndLayoutManager.DisplayWnds[0] as CogRecordDisplay, ir, cnv)
-            foreach (Form item in Application.OpenForms)
-            {
-                if (item is MenuForm)
-                {
-                    if (item.Owner != this)
-                        return;
-                    if (item.WindowState == FormWindowState.Minimized)
-                        item.WindowState = FormWindowState.Normal;
-                    item.BringToFront();
-                    return;
-                }
-            }
-            Form frm = AppManager.ShowFixedPage(typeof(MenuForm));
-            frm.Owner = this;
-        }
+		public MobileListBox mobileListBox1;
 
-        //运行ToolBlock 之后，需要处理些事情
-        // Outputs 即VisionPro 上的Outputs(即‘输出’)
-        //如果有多个窗体，那么可以通过 cnvs.IndexOf(cnv);来获得窗体的索引
-        //然后判断是哪个窗体来分类处理
-        public void RanToolBlock(Canvas cnv,ICogRecord irc,Object Outputs)
-        {
-            //显示处理结果
-            cnv.Display(irc);
+		private Label label1;
 
+		private PictureBox pictureBox1;
 
+		private Label label2;
 
-        }
-        //运行某个ToolBlock 
-        public virtual void Run(ToolBlockPowerSuite toolBlockPowerSuite,
-            String _strOutputImageRecord, Canvas cnv, 
-            params object[] Inputs)
-        {
-            toolBlockPowerSuite.Run(_strOutputImageRecord, cnv, RanToolBlock, Inputs);
-        }
-        //要使MenuForm 自动清理文本框正常显示请启用下列代码
-        protected void AutoSaveClearImage(Bitmap bmp)
-        {
-            //自动保存及清理图片
-            //保存
-            List<String> lst = CompactDB.GetNameColumnValues(CompactDB.DefaultTable);
-            if (!lst.Contains("AutoClearTime"))
-            {
-                CompactDB.Write("AutoClearTime", "3");
-            }
+		private Label lbl_IncName;
 
+		private Direction btn_More;
 
-            String picturePath = "图片";
-            if (!Directory.Exists("图片"))
-            {
-                Directory.CreateDirectory(picturePath);
-            }
-            //当前图片保存到哪个位置
-            String strNowPictureToGo = String.Format("图片\\{0}", DateTime.Now.ToString("yyyy-MM-dd"));
-            if (!Directory.Exists(strNowPictureToGo))
-            {
-                Directory.CreateDirectory(strNowPictureToGo);
-            }
-            bmp.Save(Path.Combine(strNowPictureToGo, DateTime.Now.ToString("yyyy-MM-dd HH_mm_ss") + ".bmp"));
-            // bmp.Save( DateTime.Now.ToString("yyyy-MM-dd HH_mm_ss") + ".bmp");
-            int nGapDays = CompactDB.FetchIntValue("AutoClearTime");
-            DateTime dt = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd")).AddDays(-nGapDays);
-            string deletingFolderName = dt.ToString("yyyy-MM-dd");
-            if (!Directory.Exists(Path.Combine(picturePath, deletingFolderName)))
-                return;
-            string directoryName = Path.Combine(picturePath, deletingFolderName);
-            String[] strFiles = Directory.GetFiles(directoryName);
-            for (int j = 0; j < strFiles.Length; j++)
-            {
-                File.Delete(strFiles[j]);
-            }
-            Directory.Delete(directoryName);
-        }
-        private void btn_More_Click(object sender, EventArgs e)
-        {
-            int n = 0;
-            try
-            {
-                String ApplyUserPriority = CompactDB.FetchValue(App.ApplyUserPriority);
-                n = int.Parse(ApplyUserPriority);
+		public void PrepareCanvases()
+		{
+			CogGraphicLabel cogGraphicLabel = App.ThisJobTool.cnvs[0].AddDisplayLabel(30, 50);
+			cogGraphicLabel.Color = CogColorConstants.Yellow;
+			try
+			{
+				CurrentMakeupTableName = string.Format("X{0}_Makeup", App.GetShortProjectName());
+				base.CompactDB.CreateKeyValueTable(CurrentMakeupTableName);
+			}
+			catch (Exception)
+			{
+			}
+		}
 
-            }
-            catch (Exception ex)
-            {
+		public void ShortCutRun()
+		{
+			 
+		}
 
-               dotNetLab.Tipper.Error = "检测到你可能启用了权限管理,但是可能配置不正确！";
-            }
-            if (n > 0)
-            {
-                LogInForm logIn = new LogInForm();
-                logIn.ShowDialog();
-                if (!logIn.bCloseWindow)
-                    return;
-            }
+		public void PrepareCommunication()
+		{
+		 
+		}
 
-            foreach (Form item in Application.OpenForms)
-            {
-                if (item is MenuForm)
-                {
-                    if (item.Owner != this)
-                        return;
-                    if (item.WindowState == FormWindowState.Minimized)
-                        item.WindowState = FormWindowState.Normal;
-                    item.BringToFront();
-                    return;
-                }
-            }
-            Form frm = AppManager.ShowFixedPage(typeof(MenuForm));
-            frm.Owner = this;
-        }
+		private void ServerRouteMessage(int nWhichClient, byte[] byts)
+		{
+			string text = GetValidString(Encoding.ASCII.GetString(byts));
+			if (text.Contains("\r\n"))
+			{
+				text = text.TrimEnd('\r', '\n');
+			}
+			 
+			ClearBuffer(byts);
+		}
 
+		private void ClientRouteMessage(int nWhichClient, byte[] byts)
+		{
+			string validString = GetValidString(Encoding.ASCII.GetString(byts));
+			ClearBuffer(byts);
+		}
 
-        private dotNetLab.Widgets.TextBlock lbl_OutputInfo;
-        private dotNetLab.Widgets.Container.CanvasPanel canvasPanel1;
-        private dotNetLab.Widgets.ColorDecorator colorDecorator1;
-        public dotNetLab.Widgets.MobileListBox mobileListBox1;
-        private dotNetLab.Widgets.Direction btn_More;
-        private void InitializeComponent()
-        {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.mobileListBox1 = new dotNetLab.Widgets.MobileListBox();
-            this.lbl_OutputInfo = new dotNetLab.Widgets.TextBlock();
-            this.canvasPanel1 = new dotNetLab.Widgets.Container.CanvasPanel();
-            this.colorDecorator1 = new dotNetLab.Widgets.ColorDecorator();
-            this.btn_More = new dotNetLab.Widgets.Direction();
-            this.SuspendLayout();
-            // 
-            // tipper
-            // 
-            this.tipper.Location = new System.Drawing.Point(556, 480);
-            // 
-            // mobileListBox1
-            // 
-            this.mobileListBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.mobileListBox1.BackColor = System.Drawing.Color.Transparent;
-            this.mobileListBox1.BorderColor = System.Drawing.Color.Gray;
-            this.mobileListBox1.BorderThickness = 1;
-            this.mobileListBox1.CornerAlignment = dotNetLab.Widgets.Alignments.All;
-            this.mobileListBox1.DataBindingInfo = null;
-            this.mobileListBox1.Font = new System.Drawing.Font("微软雅黑", 11F);
-            this.mobileListBox1.ImagePos = new System.Drawing.Point(0, 0);
-            this.mobileListBox1.ImageSize = new System.Drawing.Size(0, 0);
-            this.mobileListBox1.Location = new System.Drawing.Point(610, 93);
-            this.mobileListBox1.MainBindableProperty = "mobileListBox1";
-            this.mobileListBox1.Name = "mobileListBox1";
-            this.mobileListBox1.NormalColor = System.Drawing.Color.White;
-            this.mobileListBox1.Radius = -1;
-            this.mobileListBox1.Size = new System.Drawing.Size(228, 448);
-            this.mobileListBox1.Source = null;
-            this.mobileListBox1.TabIndex = 2;
-            this.mobileListBox1.Text = "mobileListBox1";
-            this.mobileListBox1.UIElementBinders = null;
-            // 
-            // lbl_OutputInfo
-            // 
-            this.lbl_OutputInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lbl_OutputInfo.BackColor = System.Drawing.Color.Transparent;
-            this.lbl_OutputInfo.BorderColor = System.Drawing.Color.Empty;
-            this.lbl_OutputInfo.BorderThickness = -1;
-            this.lbl_OutputInfo.DataBindingInfo = null;
-            this.lbl_OutputInfo.EnableFlag = true;
-            this.lbl_OutputInfo.EnableTextRenderHint = true;
-            this.lbl_OutputInfo.FlagAlign = dotNetLab.Widgets.Alignments.Left;
-            this.lbl_OutputInfo.FlagColor = System.Drawing.Color.Crimson;
-            this.lbl_OutputInfo.FlagThickness = 10;
-            this.lbl_OutputInfo.Font = new System.Drawing.Font("微软雅黑", 12F);
-            this.lbl_OutputInfo.GapBetweenTextFlag = 0;
-            this.lbl_OutputInfo.LEDStyle = false;
-            this.lbl_OutputInfo.Location = new System.Drawing.Point(612, 71);
-            this.lbl_OutputInfo.MainBindableProperty = "输出信息";
-            this.lbl_OutputInfo.Name = "lbl_OutputInfo";
-            this.lbl_OutputInfo.Radius = -1;
-            this.lbl_OutputInfo.Size = new System.Drawing.Size(104, 16);
-            this.lbl_OutputInfo.TabIndex = 4;
-            this.lbl_OutputInfo.Text = "输出信息";
-            this.lbl_OutputInfo.UIElementBinders = null;
-            this.lbl_OutputInfo.UnderLine = false;
-            this.lbl_OutputInfo.UnderLineColor = System.Drawing.Color.DarkGray;
-            this.lbl_OutputInfo.UnderLineThickness = 2F;
-            this.lbl_OutputInfo.Vertical = false;
-            this.lbl_OutputInfo.WhereReturn = ((byte)(0));
-            // 
-            // canvasPanel1
-            // 
-            this.canvasPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.canvasPanel1.BackColor = System.Drawing.Color.Transparent;
-            this.canvasPanel1.BorderColor = System.Drawing.Color.Empty;
-            this.canvasPanel1.BorderThickness = -1;
-            this.canvasPanel1.CornerAlignment = dotNetLab.Widgets.Alignments.All;
-            this.canvasPanel1.DataBindingInfo = null;
-            this.canvasPanel1.Font = new System.Drawing.Font("微软雅黑", 11F);
-            this.canvasPanel1.ImagePos = new System.Drawing.Point(0, 0);
-            this.canvasPanel1.ImageSize = new System.Drawing.Size(0, 0);
-            this.canvasPanel1.Location = new System.Drawing.Point(36, 85);
-            this.canvasPanel1.MainBindableProperty = null;
-            this.canvasPanel1.Name = "canvasPanel1";
-            this.canvasPanel1.NormalColor = System.Drawing.Color.Silver;
-            this.canvasPanel1.Radius = 20;
-            this.canvasPanel1.Size = new System.Drawing.Size(554, 414);
-            this.canvasPanel1.Source = null;
-            this.canvasPanel1.TabIndex = 5;
-            this.canvasPanel1.Text = null;
-            this.canvasPanel1.UIElementBinders = null;
-            // 
-            // colorDecorator1
-            // 
-            this.colorDecorator1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.colorDecorator1.BackColor = System.Drawing.Color.White;
-            this.colorDecorator1.DataBindingInfo = null;
-            this.colorDecorator1.Location = new System.Drawing.Point(6, 505);
-            this.colorDecorator1.MainBindableProperty = "";
-            this.colorDecorator1.Name = "colorDecorator1";
-            this.colorDecorator1.Size = new System.Drawing.Size(150, 53);
-            this.colorDecorator1.TabIndex = 6;
-            this.colorDecorator1.UIElementBinders = null;
-            // 
-            // btn_More
-            // 
-            this.btn_More.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_More.ArrowAlignment = dotNetLab.Widgets.Alignments.Right;
-            this.btn_More.BackColor = System.Drawing.Color.Transparent;
-            this.btn_More.BorderColor = System.Drawing.Color.Gray;
-            this.btn_More.BorderThickness = 2F;
-            this.btn_More.CenterImage = true;
-            this.btn_More.ClipCircleRegion = false;
-            this.btn_More.DataBindingInfo = null;
-            this.btn_More.Effect = null;
-            this.btn_More.Fill = false;
-            this.btn_More.FillColor = System.Drawing.Color.Empty;
-            this.btn_More.ImagePostion = new System.Drawing.Point(0, 0);
-            this.btn_More.ImageSize = new System.Drawing.SizeF(25F, 25F);
-            this.btn_More.Location = new System.Drawing.Point(797, 51);
-            this.btn_More.MainBindableProperty = "";
-            this.btn_More.MouseDownColor = System.Drawing.Color.Gray;
-            this.btn_More.Name = "btn_More";
-            this.btn_More.NeedEffect = false;
-            this.btn_More.Size = new System.Drawing.Size(40, 40);
-            this.btn_More.Source = ((System.Drawing.Image)(resources.GetObject("btn_More.Source")));
-            this.btn_More.TabIndex = 7;
-            this.btn_More.UIElementBinders = null;
-            this.btn_More.WhichShap = 6;
-            this.btn_More.WhitePattern = false;
-            this.btn_More.Click += new System.EventHandler(this.btn_More_Click);
-            // 
-            // MainForm
-            // 
-            this.ClientSize = new System.Drawing.Size(859, 565);
-            this.Controls.Add(this.btn_More);
-            this.Controls.Add(this.colorDecorator1);
-            this.Controls.Add(this.canvasPanel1);
-            this.Controls.Add(this.lbl_OutputInfo);
-            this.Controls.Add(this.mobileListBox1);
-            this.FontX = new System.Drawing.Font("等线 Light", 30F);
-            this.KeyPreview = true;
-            this.Name = "MainForm";
-            this.Text = "LED支架检测";
-            this.TitlePos = new System.Drawing.Point(10, 18);
-            this.Controls.SetChildIndex(this.mobileListBox1, 0);
-            this.Controls.SetChildIndex(this.lbl_OutputInfo, 0);
-            this.Controls.SetChildIndex(this.canvasPanel1, 0);
-            this.Controls.SetChildIndex(this.colorDecorator1, 0);
-            this.Controls.SetChildIndex(this.btn_More, 0);
-            this.ResumeLayout(false);
+		private void ClearBuffer(byte[] byts)
+		{
+			for (int i = 0; i < byts.Length; i++)
+			{
+				byts[i] = 0;
+			}
+		}
 
-        }
-       
-    }
+		private string GetValidString(string str)
+		{
+			int length = str.IndexOf('\0');
+			return str.Substring(0, length);
+		}
+
+		private void HardwareTiggerOccured(string CameraID, Cognex.VisionPro.ICogImage img)
+		{
+		}
+
+		private string NGOccured(ToolBlockPowerSuite toolBlockPowerSuite, Canvas cnv, Cognex.VisionPro.ICogRecord irc, object Outputs)
+		{
+			 
+			return "未找到特征";
+		}
+
+		private void OKOccured(ToolBlockPowerSuite toolBlockPowerSuite, Canvas cnv, Cognex.VisionPro.ICogRecord irc, object Outputs)
+		{
+			 
+			 
+			//cnv.DisplayText(1, text);
+		}
+
+	 
+
+		public void RanToolBlock(ToolBlockPowerSuite toolBlockPowerSuite, Canvas cnv, Cognex.VisionPro.ICogRecord irc, object Outputs)
+		{
+			cnv.Display(irc);
+			if (toolBlockPowerSuite.Passed)
+			{
+				OKOccured(toolBlockPowerSuite, cnv, irc, Outputs);
+			}
+			else
+			{
+				App.nNGNum++;
+				string NGDescription = NGOccured(toolBlockPowerSuite, cnv, irc, Outputs);
+				new Thread((ThreadStart)delegate
+				{
+					CaptureCurrentImage(toolBlockPowerSuite, NGDescription);
+				}).Start();
+			}
+		}
+
+		private void CaptureCurrentImage(ToolBlockPowerSuite toolBlockPowerSuite, string strDscription = null)
+		{
+			Cognex.VisionPro.ICogImage cogImage = null;
+			try
+			{
+				cogImage = (toolBlockPowerSuite.ThisToolBlock.Inputs[0].Value as Cognex.VisionPro.ICogImage);
+			}
+			catch
+			{
+				try
+				{
+					cogImage = (toolBlockPowerSuite.ThisToolBlock.Tools[0] as CogAcqFifoTool).OutputImage;
+				}
+				catch
+				{
+				}
+			}
+			Bitmap bmp = cogImage.ToBitmap();
+			AutoSaveClearImage(bmp, strDscription, false, "图片", null);
+		}
+
+		public void DegbugVPROScript(Cognex.VisionPro.ICogTool tool, bool isBeforeRunTool)
+		{
+		}
+
+		protected void AutoSaveClearImage(Bitmap bmp, string Description, bool OKNG = false, string picturePath = "图片", UnitDB thisDB = null)
+		{
+			if (thisDB == null)
+			{
+				thisDB = base.CompactDB;
+			}
+			List<string> nameColumnValues = base.CompactDB.GetNameColumnValues(base.CompactDB.DefaultTable);
+			if (!nameColumnValues.Contains("AutoClearTime"))
+			{
+				base.CompactDB.Write("AutoClearTime", "3");
+			}
+			if (!Directory.Exists(picturePath))
+			{
+				Directory.CreateDirectory(picturePath);
+			}
+			DateTime dateTime = DateTime.Now;
+			string text = string.Format("{0}\\{1}", picturePath, dateTime.ToString("yyyy-MM-dd"));
+			if (!Directory.Exists(text))
+			{
+				Directory.CreateDirectory(text);
+			}
+			string path = text;
+			dateTime = DateTime.Now;
+			string text2 = Path.Combine(path, dateTime.ToString("yyyy-MM-dd HH_mm_ss") + ".bmp");
+			bmp.Save(text2);
+			string text3 = null;
+			text3 = ((!OKNG) ? "NG" : "OK");
+			UnitDB unitDB = thisDB;
+			string imageRecord = App.ImageRecord;
+			object[] obj = new object[4]
+			{
+				text2,
+				text3,
+				null,
+				null
+			};
+			dateTime = DateTime.Now;
+			obj[2] = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+			obj[3] = Description;
+			unitDB.NewRecord(imageRecord, string.Format("'{0}','{1}','{2}','{3}'", obj));
+			int num = base.CompactDB.FetchIntValue("AutoClearTime");
+			if (Directory.GetDirectories(picturePath).Length > num)
+			{
+				dateTime = DateTime.Now;
+				dateTime = DateTime.Parse(dateTime.ToString("yyyy-MM-dd"));
+				string path2 = dateTime.AddDays((double)(-num)).ToString("yyyy-MM-dd");
+				if (Directory.Exists(Path.Combine(picturePath, path2)))
+				{
+					string text4 = Path.Combine(picturePath, path2);
+					string[] files = Directory.GetFiles(text4);
+					for (int i = 0; i < files.Length; i++)
+					{
+						File.Delete(files[i]);
+					}
+					Directory.Delete(text4);
+					base.CompactDB.RemoveRecord(App.ImageRecord, string.Format("图像生成日期 like '{0}%'", text4));
+				}
+			}
+		}
+
+		public virtual void Run(ToolBlockPowerSuite toolBlockPowerSuite, bool Lockable = false, params object[] Inputs)
+		{
+			if (!Lockable)
+			{
+				toolBlockPowerSuite.Run(RanToolBlock, Inputs);
+				App.nTodayImageCount++;
+				new Thread((ThreadStart)delegate
+				{
+					UnitDB compactDB3 = base.CompactDB;
+					string manufatureTotalNumRecordTable_PerDay2 = App.ManufatureTotalNumRecordTable_PerDay;
+					DateTime now2 = DateTime.Now;
+					compactDB3.Write(manufatureTotalNumRecordTable_PerDay2, now2.ToString("yyyy-MM-dd"), App.nTodayImageCount.ToString());
+					UnitDB compactDB4 = base.CompactDB;
+					string nGNumRecordTable_PerDay2 = App.NGNumRecordTable_PerDay;
+					now2 = DateTime.Now;
+					compactDB4.Write(nGNumRecordTable_PerDay2, now2.ToString("yyyy-MM-dd"), App.nNGNum.ToString());
+					DoRefreshManufatureIndicators();
+				}).Start();
+			}
+			else
+			{
+				lock (LockSoftwareTrigger)
+				{
+					toolBlockPowerSuite.Run(RanToolBlock, Inputs);
+					App.nTodayImageCount++;
+					new Thread((ThreadStart)delegate
+					{
+						UnitDB compactDB = base.CompactDB;
+						string manufatureTotalNumRecordTable_PerDay = App.ManufatureTotalNumRecordTable_PerDay;
+						DateTime now = DateTime.Now;
+						compactDB.Write(manufatureTotalNumRecordTable_PerDay, now.ToString("yyyy-MM-dd"), App.nTodayImageCount.ToString());
+						UnitDB compactDB2 = base.CompactDB;
+						string nGNumRecordTable_PerDay = App.NGNumRecordTable_PerDay;
+						now = DateTime.Now;
+						compactDB2.Write(nGNumRecordTable_PerDay, now.ToString("yyyy-MM-dd"), App.nNGNum.ToString());
+						DoRefreshManufatureIndicators();
+					}).Start();
+				}
+			}
+		}
+
+		public CogRecordDisplay GetCogRecordDisplayWndByIndex(int nIndex)
+		{
+			return DspWndLayoutManager.DisplayWnds[nIndex] as CogRecordDisplay;
+		}
+
+		private Cognex.VisionPro.ICogImage GetOutputImage(object sender)
+		{
+			Cognex.VisionPro.ICogAcqFifo cogAcqFifo = sender as Cognex.VisionPro.ICogAcqFifo;
+			int numPending = 0;
+			int numReady = 0;
+			bool busy = false;
+			cogAcqFifo.GetFifoState(out numPending, out numReady, out busy);
+			if (info == null)
+			{
+				info = new CogAcqInfo();
+			}
+			if (numReady <= 0)
+			{
+				return null;
+			}
+			return cogAcqFifo.CompleteAcquireEx(info);
+		}
+
+		private string GetCameraSerialNo(object sender)
+		{
+			CogAcqFifoGigE cogAcqFifoGigE = sender as CogAcqFifoGigE;
+			return cogAcqFifoGigE.FrameGrabber.SerialNumber;
+		}
+
+		private string GetCameraUniqueID(object sender)
+		{
+			CogAcqFifoGigE cogAcqFifoGigE = sender as CogAcqFifoGigE;
+			return cogAcqFifoGigE.FrameGrabber.UniqueID;
+		}
+
+		private string GetCameraName(object sender)
+		{
+			CogAcqFifoGigE cogAcqFifoGigE = sender as CogAcqFifoGigE;
+			return cogAcqFifoGigE.FrameGrabber.Name;
+		}
+
+		private ToolBlockPowerSuite GetToolBlock(int nIndex)
+		{
+			return App.ThisJobTool.ToolBlockSet[nIndex];
+		}
+
+		private CogToolBlock GetInnerToolBlock(int nIndex)
+		{
+			return GetToolBlock(nIndex).ThisToolBlock;
+		}
+
+		public TCPBase InitTCP_IPArgs(bool isServer = true, string ArgsTableName = null)
+		{
+			TCPBase tCPBase = null;
+			if (!isServer)
+			{
+				TCPFactoryClient tCPFactoryClient = (ArgsTableName != null) ? new TCPFactoryClient(ArgsTableName) : new TCPFactoryClient();
+				tCPFactoryClient.Route = ClientRouteMessage;
+				tCPFactoryClient.Connect();
+				return tCPFactoryClient;
+			}
+			TCPFactoryServer tCPFactoryServer = (ArgsTableName != null) ? new TCPFactoryServer(ArgsTableName) : new TCPFactoryServer();
+			tCPFactoryServer.Route = ServerRouteMessage;
+			tCPFactoryServer.Boot();
+			return tCPFactoryServer;
+		}
+
+		public PLCBase InitSerialPortArgs(bool isNormalPlc = true, string ArgsTableName = null)
+		{
+			PLCBase pLCBase;
+			if (isNormalPlc)
+			{
+				pLCBase = new NormalPLCEx();
+				if (ArgsTableName == null)
+				{
+					((NormalPLCEx)pLCBase).InitArgs("SerialPort");
+				}
+				else
+				{
+					((NormalPLCEx)pLCBase).InitArgs(ArgsTableName);
+				}
+			}
+			else
+			{
+				pLCBase = new AddressPLCEx();
+				if (ArgsTableName == null)
+				{
+					((AddressPLCEx)pLCBase).InitArgs("SerialPort");
+				}
+				else
+				{
+					((AddressPLCEx)pLCBase).InitArgs(ArgsTableName);
+				}
+			}
+			pLCBase.Open();
+			return pLCBase;
+		}
+
+		public void AutoTrigger(object sender, EventArgs e)
+		{
+			lock (LockHardwareTrigger)
+			{
+				string cameraSerialNo = GetCameraSerialNo(sender);
+				Cognex.VisionPro.ICogImage outputImage = GetOutputImage(sender);
+				HardwareTiggerOccured(cameraSerialNo, outputImage);
+			}
+		}
+
+		private void ShowMenuForm()
+		{
+			foreach (Form openForm in Application.OpenForms)
+			{
+				if (openForm is MenuForm)
+				{
+					if (openForm.Owner == this)
+					{
+						if (openForm.WindowState == FormWindowState.Minimized)
+						{
+							openForm.WindowState = FormWindowState.Normal;
+						}
+						openForm.BringToFront();
+					}
+					return;
+				}
+			}
+			Form form2 = AppManager.ShowFixedPage(typeof(MenuForm));
+			form2.Owner = this;
+		}
+
+		public void ClearConsoleText()
+		{
+			mobileListBox1.Items.Clear();
+		}
+
+		private void ShowCompactDBEditor(string dbFileName = "shikii.db")
+		{
+			AppManager.ShowCompactDBEditor(dbFileName);
+		}
+
+		protected override void prepareData()
+		{
+			base.prepareData();
+			string text = base.CompactDB.FetchValue(App.AutoCleanTime, true, "0");
+			if (text == null)
+			{
+				base.CompactDB.Write(App.AutoCleanTime, "0");
+			}
+			string text2 = base.CompactDB.FetchValue(App.ApplyUserPriority, true, "0");
+			if (text2 == null)
+			{
+				base.CompactDB.Write(App.ApplyUserPriority, "0");
+			}
+			string text3 = base.CompactDB.FetchValue(App.HideMainForm, true, "0");
+			if (text3 == null)
+			{
+				base.CompactDB.Write(App.HideMainForm, "0");
+			}
+			string text4 = base.CompactDB.FetchValue(App.Contact, true, "0");
+			if (text4 == null)
+			{
+				base.CompactDB.Write(App.Contact, " ");
+			}
+			string text5 = base.CompactDB.FetchValue(App.IncName, true, "0");
+			if (text5 == null)
+			{
+				base.CompactDB.Write(App.IncName, " ");
+			}
+			PrepareCommunication();
+			base.CompactDB.GetAllTableNames();
+			int num = base.CompactDB.AllTableNames.IndexOf(App.ImageRecord);
+			if (num == -1)
+			{
+				base.CompactDB.NewTable(App.ImageRecord, "图片路径 Text not null ,OKNG Text not null,图像生成日期 Text not null,描述 Text not null");
+			}
+			num = base.CompactDB.AllTableNames.IndexOf(App.ManufatureTotalNumRecordTable_PerDay);
+			if (num == -1)
+			{
+				base.CompactDB.CopyKeyValueTable(App.ManufatureTotalNumRecordTable_PerDay, base.CompactDB.DefaultTable);
+				base.CompactDB.ExecuteNonQuery("delete from " + App.ManufatureTotalNumRecordTable_PerDay, dotNetLab.Data.DBOperator.OPERATOR_TRUNCATE);
+			}
+			UnitDB compactDB = base.CompactDB;
+			DateTime now = DateTime.Now;
+			App.nTodayImageCount = compactDB.FetchIntValue(now.ToString("yyyy-MM-dd"), App.ManufatureTotalNumRecordTable_PerDay);
+			num = base.CompactDB.AllTableNames.IndexOf(App.NGNumRecordTable_PerDay);
+			if (num == -1)
+			{
+				base.CompactDB.CopyKeyValueTable(App.NGNumRecordTable_PerDay, base.CompactDB.DefaultTable);
+				base.CompactDB.ExecuteNonQuery("delete from " + App.NGNumRecordTable_PerDay, dotNetLab.Data.DBOperator.OPERATOR_TRUNCATE);
+			}
+			UnitDB compactDB2 = base.CompactDB;
+			now = DateTime.Now;
+			App.nNGNum = compactDB2.FetchIntValue(now.ToString("yyyy-MM-dd"), App.NGNumRecordTable_PerDay);
+			num = base.CompactDB.AllTableNames.IndexOf(App.StatisticNGOKPercentTable_PerDay);
+			if (num == -1)
+			{
+				base.CompactDB.CopyKeyValueTable(App.StatisticNGOKPercentTable_PerDay, base.CompactDB.DefaultTable);
+				base.CompactDB.ExecuteNonQuery("delete from " + App.StatisticNGOKPercentTable_PerDay, dotNetLab.Data.DBOperator.OPERATOR_TRUNCATE);
+			}
+		}
+
+		private void CheckProjectFolder()
+		{
+			if (!Directory.Exists(App.ProjsFolderName))
+			{
+				Directory.CreateDirectory(App.ProjsFolderName);
+				if (!Directory.Exists(App.OriginProjectPath))
+				{
+					Directory.CreateDirectory(App.OriginProjectPath);
+					string text = base.CompactDB.FetchValue(App.CurrentProject, true, "0");
+					if (string.IsNullOrEmpty(text) || text.Equals("0"))
+					{
+						base.CompactDB.Write(App.CurrentProject, App.OriginProjectPath);
+					}
+				}
+			}
+		}
+
+		public void PrepareVision()
+		{
+			AutoTriggerHandler = AutoTrigger;
+			App.ThisJobTool = new JobTool();
+			App.ThisJobTool.CompactDB.Host = base.CompactDB;
+			App.ThisJobTool.ConsolePipe.Host = base.ConsolePipe;
+			App.ThisJobTool.LogPipe.Host = base.LogPipe;
+			App.ThisJobTool.DisplayWnds = DspWndLayoutManager.dspWndArr;
+			App.ThisJobTool.mainFormInvoker.Host = this;
+			App.ThisJobTool.Deserialize();
+			PrepareCanvases();
+		}
+
+		public Form ShowQuickBuildForm()
+		{
+			string a = base.CompactDB.FetchValue(App.HideMainForm, true, "0");
+			if (!(a == "1"))
+			{
+				if (!(a == "2"))
+				{
+					return this;
+				}
+				return App.ShowJobManagerWnd(null);
+			}
+			Form form = AppManager.ShowFixedPage(typeof(MenuForm));
+			form.Owner = this;
+			form.FormClosed += delegate
+			{
+				Close();
+			};
+			return form;
+		}
+
+		protected override void prepareCtrls()
+		{
+			base.prepareCtrls();
+			InitializeComponent();
+			DspWndLayoutManager = new DspWndLayout();
+			string text;
+			while (true)
+			{
+				text = base.CompactDB.FetchValue("AppName", true, "0");
+				if (text != null)
+				{
+					break;
+				}
+				base.CompactDB.Write("AppName", "视觉检测应用");
+			}
+			Text = text;
+			if (-99999 == base.CompactDB.FetchIntValue("DisplayWndNum"))
+			{
+				base.CompactDB.Write("DisplayWndNum", "1");
+			}
+			DspWndLayoutManager.PrepareDspWnds(typeof(CogRecordDisplay), canvasPanel1, base.CompactDB.FetchIntValue("DisplayWndNum"));
+			SpecialInfo();
+		}
+
+		protected override void prepareEvents()
+		{
+			base.prepareEvents();
+			base.KeyDown += MainForm_KeyDown;
+			base.Load += delegate
+			{
+				DoRefreshManufatureIndicators();
+			};
+		}
+
+		private void DoRefreshManufatureIndicators()
+		{
+			Action<Control, double> method = delegate(Control c, double n)
+			{
+				c.Text = n.ToString();
+			};
+			Invoke(method, lbl_TotalNum, App.nTodayImageCount);
+			Invoke(method, lbl_NGNum, App.nNGNum);
+			double num = 0.0;
+			num = ((App.nTodayImageCount == 0) ? 0.0 : ((double)(((float)App.nTodayImageCount - (float)App.nNGNum * 1f) / (float)App.nTodayImageCount)));
+			num = Math.Round(num, 3);
+			num *= 100.0;
+			Invoke(method, lbl_GoodPercent, num);
+			base.CompactDB.Write(App.StatisticNGOKPercentTable_PerDay, DateTime.Now.ToString("yyyy-MM-dd"), string.Format("{0}^{1}", num, 100.0 - num));
+		}
+
+		private void MainForm_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyData == (Keys)131155)
+			{
+				ShortCutRun();
+			}
+			if (e.KeyData == (Keys)131139)
+			{
+				mobileListBox1.Items.Clear();
+			}
+			if (e.KeyData == (Keys)131146)
+			{
+				ShowMenuForm();
+			}
+		}
+
+		private void btn_More_Click(object sender, EventArgs e)
+		{
+			int num = 0;
+			try
+			{
+				string s = base.CompactDB.FetchValue(App.ApplyUserPriority, true, "0");
+				num = int.Parse(s);
+			}
+			catch (Exception)
+			{
+				dotNetLab.Tipper.Error = "检测到你可能启用了权限管理,但是可能配置不正确！";
+			}
+			if (num > 0)
+			{
+				LogInForm logInForm = new LogInForm();
+				logInForm.ShowDialog();
+				if (!logInForm.bCloseWindow)
+				{
+					return;
+				}
+			}
+			foreach (Form openForm in Application.OpenForms)
+			{
+				if (openForm is MenuForm)
+				{
+					if (openForm.Owner == this)
+					{
+						if (openForm.WindowState == FormWindowState.Minimized)
+						{
+							openForm.WindowState = FormWindowState.Normal;
+						}
+						openForm.BringToFront();
+					}
+					return;
+				}
+			}
+			Form form2 = AppManager.ShowFixedPage(typeof(MenuForm));
+			form2.Owner = this;
+		}
+
+		private void InitializeComponent()
+		{
+			System.ComponentModel.ComponentResourceManager componentResourceManager = new System.ComponentModel.ComponentResourceManager(typeof(shikii.VisionJob.MainForm));
+			mobileListBox1 = new dotNetLab.Widgets.MobileListBox();
+			lbl_OutputInfo = new dotNetLab.Widgets.TextBlock();
+			canvasPanel1 = new dotNetLab.Widgets.Container.CanvasPanel();
+			colorDecorator1 = new dotNetLab.Widgets.ColorDecorator();
+			btn_More = new dotNetLab.Widgets.Direction();
+			label1 = new System.Windows.Forms.Label();
+			pictureBox1 = new System.Windows.Forms.PictureBox();
+			label2 = new System.Windows.Forms.Label();
+			lbl_IncName = new System.Windows.Forms.Label();
+			textBlock6 = new dotNetLab.Widgets.TextBlock();
+			lbl_GoodPercent = new dotNetLab.Widgets.TextBlock();
+			textBlock4 = new dotNetLab.Widgets.TextBlock();
+			lbl_NGNum = new dotNetLab.Widgets.TextBlock();
+			textBlock2 = new dotNetLab.Widgets.TextBlock();
+			lbl_TotalNum = new dotNetLab.Widgets.TextBlock();
+			((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+			SuspendLayout();
+			tipper.Location = new System.Drawing.Point(556, 480);
+			mobileListBox1.Anchor = (System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right);
+			mobileListBox1.BackColor = System.Drawing.Color.Transparent;
+			mobileListBox1.BorderColor = System.Drawing.Color.Gray;
+			mobileListBox1.BorderThickness = 1;
+			mobileListBox1.CornerAlignment = dotNetLab.Widgets.Alignments.All;
+			mobileListBox1.DataBindingInfo = null;
+			mobileListBox1.Font = new System.Drawing.Font("微软雅黑", 11f);
+			mobileListBox1.ImagePos = new System.Drawing.Point(0, 0);
+			mobileListBox1.ImageSize = new System.Drawing.Size(0, 0);
+			mobileListBox1.Location = new System.Drawing.Point(610, 93);
+			mobileListBox1.MainBindableProperty = "mobileListBox1";
+			mobileListBox1.Name = "mobileListBox1";
+			mobileListBox1.NormalColor = System.Drawing.Color.White;
+			mobileListBox1.Radius = -1;
+			mobileListBox1.Size = new System.Drawing.Size(228, 406);
+			mobileListBox1.Source = null;
+			mobileListBox1.TabIndex = 2;
+			mobileListBox1.Text = "mobileListBox1";
+			mobileListBox1.UIElementBinders = null;
+			lbl_OutputInfo.Anchor = (System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right);
+			lbl_OutputInfo.BackColor = System.Drawing.Color.Transparent;
+			lbl_OutputInfo.BorderColor = System.Drawing.Color.Empty;
+			lbl_OutputInfo.BorderThickness = -1;
+			lbl_OutputInfo.DataBindingInfo = null;
+			lbl_OutputInfo.EnableFlag = true;
+			lbl_OutputInfo.EnableTextRenderHint = true;
+			lbl_OutputInfo.FlagAlign = dotNetLab.Widgets.Alignments.Left;
+			lbl_OutputInfo.FlagColor = System.Drawing.Color.Crimson;
+			lbl_OutputInfo.FlagThickness = 10;
+			lbl_OutputInfo.Font = new System.Drawing.Font("微软雅黑", 12f);
+			lbl_OutputInfo.GapBetweenTextFlag = 0;
+			lbl_OutputInfo.LEDStyle = false;
+			lbl_OutputInfo.Location = new System.Drawing.Point(612, 71);
+			lbl_OutputInfo.MainBindableProperty = "输出信息";
+			lbl_OutputInfo.Name = "lbl_OutputInfo";
+			lbl_OutputInfo.Radius = -1;
+			lbl_OutputInfo.Size = new System.Drawing.Size(104, 16);
+			lbl_OutputInfo.TabIndex = 4;
+			lbl_OutputInfo.Text = "输出信息";
+			lbl_OutputInfo.UIElementBinders = null;
+			lbl_OutputInfo.UnderLine = false;
+			lbl_OutputInfo.UnderLineColor = System.Drawing.Color.DarkGray;
+			lbl_OutputInfo.UnderLineThickness = 2f;
+			lbl_OutputInfo.Vertical = false;
+			lbl_OutputInfo.WhereReturn = 0;
+			canvasPanel1.Anchor = (System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right);
+			canvasPanel1.BackColor = System.Drawing.Color.Transparent;
+			canvasPanel1.BorderColor = System.Drawing.Color.Empty;
+			canvasPanel1.BorderThickness = -1;
+			canvasPanel1.CornerAlignment = dotNetLab.Widgets.Alignments.All;
+			canvasPanel1.DataBindingInfo = null;
+			canvasPanel1.Font = new System.Drawing.Font("微软雅黑", 11f);
+			canvasPanel1.ImagePos = new System.Drawing.Point(0, 0);
+			canvasPanel1.ImageSize = new System.Drawing.Size(0, 0);
+			canvasPanel1.Location = new System.Drawing.Point(36, 132);
+			canvasPanel1.MainBindableProperty = null;
+			canvasPanel1.Name = "canvasPanel1";
+			canvasPanel1.NormalColor = System.Drawing.Color.Silver;
+			canvasPanel1.Radius = 20;
+			canvasPanel1.Size = new System.Drawing.Size(554, 367);
+			canvasPanel1.Source = null;
+			canvasPanel1.TabIndex = 5;
+			canvasPanel1.Text = null;
+			canvasPanel1.UIElementBinders = null;
+			colorDecorator1.Anchor = (System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left);
+			colorDecorator1.BackColor = System.Drawing.Color.White;
+			colorDecorator1.DataBindingInfo = null;
+			colorDecorator1.Location = new System.Drawing.Point(6, 505);
+			colorDecorator1.MainBindableProperty = "";
+			colorDecorator1.Name = "colorDecorator1";
+			colorDecorator1.Size = new System.Drawing.Size(150, 53);
+			colorDecorator1.TabIndex = 6;
+			colorDecorator1.UIElementBinders = null;
+			btn_More.Anchor = (System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right);
+			btn_More.ArrowAlignment = dotNetLab.Widgets.Alignments.Right;
+			btn_More.BackColor = System.Drawing.Color.Transparent;
+			btn_More.BorderColor = System.Drawing.Color.Gray;
+			btn_More.BorderThickness = 2f;
+			btn_More.CenterImage = true;
+			btn_More.ClipCircleRegion = false;
+			btn_More.DataBindingInfo = null;
+			btn_More.Effect = null;
+			btn_More.Fill = false;
+			btn_More.FillColor = System.Drawing.Color.Empty;
+			btn_More.ImagePostion = new System.Drawing.Point(0, 0);
+			btn_More.ImageSize = new System.Drawing.SizeF(25f, 25f);
+			btn_More.Location = new System.Drawing.Point(797, 51);
+			btn_More.MainBindableProperty = "";
+			btn_More.MouseDownColor = System.Drawing.Color.Gray;
+			btn_More.Name = "btn_More";
+			btn_More.NeedEffect = false;
+			btn_More.Size = new System.Drawing.Size(40, 40);
+			btn_More.Source = (System.Drawing.Image)componentResourceManager.GetObject("btn_More.Source");
+			btn_More.TabIndex = 7;
+			btn_More.UIElementBinders = null;
+			btn_More.WhichShap = 6;
+			btn_More.WhitePattern = false;
+			btn_More.Click += new System.EventHandler(btn_More_Click);
+			label1.Anchor = (System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left);
+			label1.AutoSize = true;
+			label1.Font = new System.Drawing.Font("微软雅黑", 11f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 134);
+			label1.ForeColor = System.Drawing.Color.Teal;
+			label1.Location = new System.Drawing.Point(179, 530);
+			label1.Name = "label1";
+			label1.Size = new System.Drawing.Size(54, 20);
+			label1.TabIndex = 8;
+			label1.Text = "联系人";
+			pictureBox1.Location = new System.Drawing.Point(9, 12);
+			pictureBox1.Name = "pictureBox1";
+			pictureBox1.Size = new System.Drawing.Size(52, 47);
+			pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+			pictureBox1.TabIndex = 9;
+			pictureBox1.TabStop = false;
+			label2.AutoSize = true;
+			label2.Font = new System.Drawing.Font("微软雅黑", 11f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 134);
+			label2.ForeColor = System.Drawing.Color.Teal;
+			label2.Location = new System.Drawing.Point(316, 39);
+			label2.Name = "label2";
+			label2.Size = new System.Drawing.Size(27, 20);
+			label2.TabIndex = 8;
+			label2.Text = "by";
+			lbl_IncName.AutoSize = true;
+			lbl_IncName.Font = new System.Drawing.Font("微软雅黑", 12f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 134);
+			lbl_IncName.ForeColor = System.Drawing.Color.Crimson;
+			lbl_IncName.Location = new System.Drawing.Point(349, 39);
+			lbl_IncName.Name = "lbl_IncName";
+			lbl_IncName.Size = new System.Drawing.Size(0, 21);
+			lbl_IncName.TabIndex = 10;
+			textBlock6.Anchor = System.Windows.Forms.AnchorStyles.Top;
+			textBlock6.BackColor = System.Drawing.Color.Transparent;
+			textBlock6.BorderColor = System.Drawing.Color.Empty;
+			textBlock6.BorderThickness = -1;
+			textBlock6.DataBindingInfo = null;
+			textBlock6.EnableFlag = false;
+			textBlock6.EnableTextRenderHint = false;
+			textBlock6.FlagAlign = dotNetLab.Widgets.Alignments.Left;
+			textBlock6.FlagColor = System.Drawing.Color.DodgerBlue;
+			textBlock6.FlagThickness = 5;
+			textBlock6.Font = new System.Drawing.Font("微软雅黑", 12f);
+			textBlock6.GapBetweenTextFlag = 10;
+			textBlock6.LEDStyle = false;
+			textBlock6.Location = new System.Drawing.Point(434, 91);
+			textBlock6.MainBindableProperty = "合格率:";
+			textBlock6.Name = "textBlock6";
+			textBlock6.Radius = -1;
+			textBlock6.Size = new System.Drawing.Size(77, 35);
+			textBlock6.TabIndex = 16;
+			textBlock6.Text = "合格率:";
+			textBlock6.UIElementBinders = null;
+			textBlock6.UnderLine = false;
+			textBlock6.UnderLineColor = System.Drawing.Color.DarkGray;
+			textBlock6.UnderLineThickness = 2f;
+			textBlock6.Vertical = false;
+			textBlock6.WhereReturn = 0;
+			lbl_GoodPercent.Anchor = System.Windows.Forms.AnchorStyles.Top;
+			lbl_GoodPercent.BackColor = System.Drawing.Color.Transparent;
+			lbl_GoodPercent.BorderColor = System.Drawing.Color.Empty;
+			lbl_GoodPercent.BorderThickness = -1;
+			lbl_GoodPercent.DataBindingInfo = null;
+			lbl_GoodPercent.EnableFlag = false;
+			lbl_GoodPercent.EnableTextRenderHint = false;
+			lbl_GoodPercent.FlagAlign = dotNetLab.Widgets.Alignments.Left;
+			lbl_GoodPercent.FlagColor = System.Drawing.Color.DodgerBlue;
+			lbl_GoodPercent.FlagThickness = 5;
+			lbl_GoodPercent.Font = new System.Drawing.Font("DS-Digital", 30f);
+			lbl_GoodPercent.ForeColor = System.Drawing.Color.SeaGreen;
+			lbl_GoodPercent.GapBetweenTextFlag = 10;
+			lbl_GoodPercent.LEDStyle = true;
+			lbl_GoodPercent.Location = new System.Drawing.Point(513, 91);
+			lbl_GoodPercent.MainBindableProperty = "100.2";
+			lbl_GoodPercent.Name = "lbl_GoodPercent";
+			lbl_GoodPercent.Radius = -1;
+			lbl_GoodPercent.Size = new System.Drawing.Size(76, 35);
+			lbl_GoodPercent.TabIndex = 13;
+			lbl_GoodPercent.Text = "100.2";
+			lbl_GoodPercent.UIElementBinders = null;
+			lbl_GoodPercent.UnderLine = false;
+			lbl_GoodPercent.UnderLineColor = System.Drawing.Color.DarkGray;
+			lbl_GoodPercent.UnderLineThickness = 2f;
+			lbl_GoodPercent.Vertical = false;
+			lbl_GoodPercent.WhereReturn = 0;
+			textBlock4.Anchor = System.Windows.Forms.AnchorStyles.Top;
+			textBlock4.BackColor = System.Drawing.Color.Transparent;
+			textBlock4.BorderColor = System.Drawing.Color.Empty;
+			textBlock4.BorderThickness = -1;
+			textBlock4.DataBindingInfo = null;
+			textBlock4.EnableFlag = false;
+			textBlock4.EnableTextRenderHint = false;
+			textBlock4.FlagAlign = dotNetLab.Widgets.Alignments.Left;
+			textBlock4.FlagColor = System.Drawing.Color.DodgerBlue;
+			textBlock4.FlagThickness = 5;
+			textBlock4.Font = new System.Drawing.Font("微软雅黑", 12f);
+			textBlock4.GapBetweenTextFlag = 10;
+			textBlock4.LEDStyle = false;
+			textBlock4.Location = new System.Drawing.Point(257, 91);
+			textBlock4.MainBindableProperty = "不合格数:";
+			textBlock4.Name = "textBlock4";
+			textBlock4.Radius = -1;
+			textBlock4.Size = new System.Drawing.Size(77, 35);
+			textBlock4.TabIndex = 17;
+			textBlock4.Text = "不合格数:";
+			textBlock4.UIElementBinders = null;
+			textBlock4.UnderLine = false;
+			textBlock4.UnderLineColor = System.Drawing.Color.DarkGray;
+			textBlock4.UnderLineThickness = 2f;
+			textBlock4.Vertical = false;
+			textBlock4.WhereReturn = 0;
+			lbl_NGNum.Anchor = System.Windows.Forms.AnchorStyles.Top;
+			lbl_NGNum.BackColor = System.Drawing.Color.Transparent;
+			lbl_NGNum.BorderColor = System.Drawing.Color.Empty;
+			lbl_NGNum.BorderThickness = -1;
+			lbl_NGNum.DataBindingInfo = null;
+			lbl_NGNum.EnableFlag = false;
+			lbl_NGNum.EnableTextRenderHint = false;
+			lbl_NGNum.FlagAlign = dotNetLab.Widgets.Alignments.Left;
+			lbl_NGNum.FlagColor = System.Drawing.Color.DodgerBlue;
+			lbl_NGNum.FlagThickness = 5;
+			lbl_NGNum.Font = new System.Drawing.Font("DS-Digital", 30f);
+			lbl_NGNum.ForeColor = System.Drawing.Color.Crimson;
+			lbl_NGNum.GapBetweenTextFlag = 10;
+			lbl_NGNum.LEDStyle = true;
+			lbl_NGNum.Location = new System.Drawing.Point(336, 91);
+			lbl_NGNum.MainBindableProperty = "9";
+			lbl_NGNum.Name = "lbl_NGNum";
+			lbl_NGNum.Radius = -1;
+			lbl_NGNum.Size = new System.Drawing.Size(92, 35);
+			lbl_NGNum.TabIndex = 14;
+			lbl_NGNum.Text = "9";
+			lbl_NGNum.UIElementBinders = null;
+			lbl_NGNum.UnderLine = false;
+			lbl_NGNum.UnderLineColor = System.Drawing.Color.DarkGray;
+			lbl_NGNum.UnderLineThickness = 2f;
+			lbl_NGNum.Vertical = false;
+			lbl_NGNum.WhereReturn = 0;
+			textBlock2.Anchor = System.Windows.Forms.AnchorStyles.Top;
+			textBlock2.BackColor = System.Drawing.Color.Transparent;
+			textBlock2.BorderColor = System.Drawing.Color.Empty;
+			textBlock2.BorderThickness = -1;
+			textBlock2.DataBindingInfo = null;
+			textBlock2.EnableFlag = false;
+			textBlock2.EnableTextRenderHint = false;
+			textBlock2.FlagAlign = dotNetLab.Widgets.Alignments.Left;
+			textBlock2.FlagColor = System.Drawing.Color.DodgerBlue;
+			textBlock2.FlagThickness = 5;
+			textBlock2.Font = new System.Drawing.Font("微软雅黑", 12f);
+			textBlock2.GapBetweenTextFlag = 10;
+			textBlock2.LEDStyle = false;
+			textBlock2.Location = new System.Drawing.Point(36, 91);
+			textBlock2.MainBindableProperty = "已经生产 :";
+			textBlock2.Name = "textBlock2";
+			textBlock2.Radius = -1;
+			textBlock2.Size = new System.Drawing.Size(77, 35);
+			textBlock2.TabIndex = 18;
+			textBlock2.Text = "已经生产 :";
+			textBlock2.UIElementBinders = null;
+			textBlock2.UnderLine = false;
+			textBlock2.UnderLineColor = System.Drawing.Color.DarkGray;
+			textBlock2.UnderLineThickness = 2f;
+			textBlock2.Vertical = false;
+			textBlock2.WhereReturn = 0;
+			lbl_TotalNum.Anchor = System.Windows.Forms.AnchorStyles.Top;
+			lbl_TotalNum.BackColor = System.Drawing.Color.Transparent;
+			lbl_TotalNum.BorderColor = System.Drawing.Color.Empty;
+			lbl_TotalNum.BorderThickness = -1;
+			lbl_TotalNum.DataBindingInfo = null;
+			lbl_TotalNum.EnableFlag = false;
+			lbl_TotalNum.EnableTextRenderHint = false;
+			lbl_TotalNum.FlagAlign = dotNetLab.Widgets.Alignments.Left;
+			lbl_TotalNum.FlagColor = System.Drawing.Color.DodgerBlue;
+			lbl_TotalNum.FlagThickness = 5;
+			lbl_TotalNum.Font = new System.Drawing.Font("DS-Digital", 30f);
+			lbl_TotalNum.ForeColor = System.Drawing.Color.DodgerBlue;
+			lbl_TotalNum.GapBetweenTextFlag = 10;
+			lbl_TotalNum.LEDStyle = true;
+			lbl_TotalNum.Location = new System.Drawing.Point(119, 91);
+			lbl_TotalNum.MainBindableProperty = "0";
+			lbl_TotalNum.Name = "lbl_TotalNum";
+			lbl_TotalNum.Radius = -1;
+			lbl_TotalNum.Size = new System.Drawing.Size(141, 35);
+			lbl_TotalNum.TabIndex = 15;
+			lbl_TotalNum.Text = "0";
+			lbl_TotalNum.UIElementBinders = null;
+			lbl_TotalNum.UnderLine = false;
+			lbl_TotalNum.UnderLineColor = System.Drawing.Color.DarkGray;
+			lbl_TotalNum.UnderLineThickness = 2f;
+			lbl_TotalNum.Vertical = false;
+			lbl_TotalNum.WhereReturn = 0;
+			base.ClientSize = new System.Drawing.Size(859, 565);
+			base.ClipboardText = "";
+			base.Controls.Add(textBlock6);
+			base.Controls.Add(lbl_GoodPercent);
+			base.Controls.Add(textBlock4);
+			base.Controls.Add(lbl_NGNum);
+			base.Controls.Add(textBlock2);
+			base.Controls.Add(lbl_TotalNum);
+			base.Controls.Add(lbl_IncName);
+			base.Controls.Add(pictureBox1);
+			base.Controls.Add(label2);
+			base.Controls.Add(label1);
+			base.Controls.Add(btn_More);
+			base.Controls.Add(colorDecorator1);
+			base.Controls.Add(canvasPanel1);
+			base.Controls.Add(lbl_OutputInfo);
+			base.Controls.Add(mobileListBox1);
+			base.FontX = new System.Drawing.Font("等线 Light", 30f);
+			base.KeyPreview = true;
+			base.Name = "MainForm";
+			Text = "LED支架检测";
+			base.TitlePos = new System.Drawing.Point(60, 18);
+			base.Controls.SetChildIndex(mobileListBox1, 0);
+			base.Controls.SetChildIndex(lbl_OutputInfo, 0);
+			base.Controls.SetChildIndex(canvasPanel1, 0);
+			base.Controls.SetChildIndex(colorDecorator1, 0);
+			base.Controls.SetChildIndex(btn_More, 0);
+			base.Controls.SetChildIndex(label1, 0);
+			base.Controls.SetChildIndex(label2, 0);
+			base.Controls.SetChildIndex(pictureBox1, 0);
+			base.Controls.SetChildIndex(lbl_IncName, 0);
+			base.Controls.SetChildIndex(lbl_TotalNum, 0);
+			base.Controls.SetChildIndex(textBlock2, 0);
+			base.Controls.SetChildIndex(lbl_NGNum, 0);
+			base.Controls.SetChildIndex(textBlock4, 0);
+			base.Controls.SetChildIndex(lbl_GoodPercent, 0);
+			base.Controls.SetChildIndex(textBlock6, 0);
+			((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+			ResumeLayout(false);
+			PerformLayout();
+		}
+
+		private void SpecialInfo()
+		{
+			base.EnableDrawUpDownPattern = true;
+			base.Img_Up = UI.RibbonSpring;
+			base.Img_Down = UI.RibbonUnderwater;
+			base.Load += delegate
+			{
+				MaxWindow();
+			};
+			pictureBox1.Image = Image.FromFile("App.png");
+			string text = base.CompactDB.FetchValue(App.Contact, true, "0");
+			label1.Text = text;
+			string text2 = base.CompactDB.FetchValue(App.IncName, true, "0");
+			lbl_IncName.Text = text2;
+		}
+	}
 }
-
-//使用范例
-/*
-     public  void MainCheckLEDSupporting()
-        {
-            App.thisPowerSuite.Run("CogFixtureTool2.OutputImage",
-                   cnv, this, (ir, obj) =>
-                   {
-                       pnts_Results.Clear();
-                       ToolBlockPowerSuite.DisplayResultImage
-                        (App.DspWndLayoutManager.DisplayWnds[0] as CogRecordDisplay, ir, cnv);
-                      
-          
-                       //取出输出图片
-                       CogImage8Grey img = App.thisPowerSuite.RunOutPuts[0] as CogImage8Grey;
-                     
-
-                       int nImageSizeWidth = img.Width;
-                       int nImageSizeHeight = img.Height;
-                       int nUnitSizeWidth = img.Width / 22;
-                       int nUnitSizeHeight = img.Height / 22;
-
-                       AutoSaveClearImage(img.ToBitmap());
-
-                       if (cnv.Labels[0].Text == "OK")
-                       {
-
-                           byte[] bytArry = new byte[2] { 0, 0 };
-                           factoryServer.Send_Mill(0, bytArry);
-                           return;
-                       }
-
-                       //拿到Blob分析结果
-                       CogBlobResults results = App.thisPowerSuite.RunOutPuts[1] as CogBlobResults;
-                       //得到的Blob 数
-                       int nNum = results.GetBlobs().Count;
-                       //初始化容器
-                       CheckPoint[] checkPoints = new CheckPoint[22 * 22];
-                      
-                       //行
-                       for (int i = 0; i < 22; i++)
-                       {
-                           //列
-                           for (int j = 0; j < 22; j++)
-                           {
-                               checkPoints[i * 22 + j] = new CheckPoint();
-                               //容器中的每个元素储存为该元素的行，列值
-                               checkPoints[i * 22 + j].pnt = new Point(i, j);
-                           }
-                       }
-                        
-                       //从Blob 分析结果中得到每个正常槽的对应的行列
-                       for (int i = 0; i < nNum; i++)
-                       {
-
-                           int nRow = -1;
-                           int nColumn = -1;
-                           double X = (int)results.GetBlobs()[i].CenterOfMassX;
-                           int Y = (int)results.GetBlobs()[i].CenterOfMassY;
-                           double nX = X / nUnitSizeWidth;
-                           if (X % nUnitSizeWidth == 0)
-                               nColumn = (int)nX;
-                           else
-                               nColumn = (int)(nX + 1);
-
-                           double nY = Y / nUnitSizeHeight;
-                           if (Y % nUnitSizeHeight == 0)
-                               nRow = (int)nY;
-                           else
-                               nRow = (int)(nY + 1);
-                           checkPoints[(nRow - 1) * 22 + (nColumn - 1)].isEmpty = false;
-                       }
-                       //收集行列处槽是否为空的坐标。最终是要得到有缺陷的槽的行列值
-                       //行
-                       for (int i = 0; i < 22; i++)
-                       {
-                           //列
-                           for (int j = 0; j < 22; j++)
-                           {
-                               if (checkPoints[i * 22 + j].isEmpty)
-                               {
-                                   //使用List 来存储缺陷槽的行列
-                                   pnts_Results.Add(new Point(i +1, j+1));
-                                  
-                               }
-                           }
-
-                       }
-                       //显示输出信息
-                       ConsolePipe.Error(String.Format("发现{0}个问题", pnts_Results.Count));
-                       for (int i = 0; i < pnts_Results.Count; i++)
-                       {
-                           ConsolePipe.Info("行，列 ：" + pnts_Results[i].X.ToString() + "," + pnts_Results[i].Y.ToString());
-                       }
-                       //发送到PLC
-                       //StringBuilder sb = new StringBuilder();
-                       //sb.Append(0.ToString("X2"));
-                       //for (int i = 0; i < pnts_Results.Count; i++)
-                       //{
-                       //    sb.Append(pnts_Results[i].X.ToString("X2") + pnts_Results[i].Y.ToString("X2"));
-                       //}
-                       //byte[] bytArr = factoryServer.TextEncode.GetBytes(sb.ToString());
-
-                       byte[] bytArray = new byte[pnts_Results.Count * 2 +1];
-                       bytArray[0] = 0;
-                       for (int i = 1; i < bytArray.Length; i +=2)
-                       {
-                           // sb.Append(pnts_Results[i].X.ToString("X2") + pnts_Results[i].Y.ToString("X2"));
-                           bytArray[i] = (byte)pnts_Results[(i-1)/2].X;
-                           bytArray [i+1] = (byte)pnts_Results[(i -1)/2].Y;
-
-                       }
-
-                       factoryServer.Send_Mill(0, bytArray);
-                   }
-                 );
-        }
-     
-     */

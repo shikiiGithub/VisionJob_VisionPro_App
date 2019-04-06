@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>shikii.VisionJob</RootNamespace>
     <AssemblyName>VisionJob</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -33,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Cognex.VisionPro, Version=55.0.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
@@ -70,6 +72,10 @@
     <Reference Include="Cognex.VisionPro.Display.Controls, Version=55.0.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\New_Vision_App_Framework\VisionProLib\vpro_ref_dlls\Cognex.VisionPro.Display.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.FGGigE, Version=55.0.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.FGGigE.dll</HintPath>
     </Reference>
     <Reference Include="Cognex.VisionPro.PatInspect, Version=55.0.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -112,6 +118,9 @@
     <Compile Include="手动操作\ManualForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="日志\RetriveDataForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="菜单\MenuForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -123,12 +132,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Res.resx</DependentUpon>
-    </Compile>
-    <Compile Include="日志\RetriveLogForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="日志\RetriveLogForm.Designer.cs">
-      <DependentUpon>RetriveLogForm.cs</DependentUpon>
     </Compile>
     <Compile Include="显示窗口布局\Dsp_Wnds\Dsp_1.cs">
       <SubType>UserControl</SubType>
@@ -173,6 +176,14 @@
       <DependentUpon>Dsp_Base.cs</DependentUpon>
     </Compile>
     <Compile Include="显示窗口布局\DspWndLayout.cs" />
+    <Compile Include="补偿\MakeupForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="通讯\AddressPLCEx.cs" />
+    <Compile Include="通讯\CommunicationWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="通讯\NormalPLCEx.cs" />
     <Compile Include="通讯\TCPFactoryClient.cs" />
     <Compile Include="通讯\TCPFactoryServer.cs" />
     <Compile Include="通讯\TCPNetConnectForm.cs">
@@ -232,6 +243,9 @@
       <Project>{BC982388-B669-48CF-8F9A-A9DAC94BFFFD}</Project>
       <Name>dotNetLab</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

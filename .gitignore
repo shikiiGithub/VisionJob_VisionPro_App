@@ -5,3 +5,6 @@
 /主程序/obj/x86/Debug/*.cache
 /主程序外部接口/obj/Debug/*.cache
 /主程序/obj/x86/Debug/*.CopyComplete
+/.idea
+/.vs
+obj
