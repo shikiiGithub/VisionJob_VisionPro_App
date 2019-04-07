@@ -14,8 +14,9 @@ namespace shikii.VisionJob
 		public static MainForm frm;
 
 		public static JobToolEditV2 EditV2;
+        public static int nLightOnTime = 100;
 
-		public static string CAMERSHOT = "Snap";
+        public static string CAMERSHOT = "Snap";
 
 		public static int nCurrentBorder = 0;
 

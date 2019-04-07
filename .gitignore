@@ -8,3 +8,10 @@
 /.idea
 /.vs
 obj
+/Log.mdf
+/Log.txt
+/shikii.db
+/SQLite.Interop.dll
+/sqlite3.dll
+/System.Data.SQLite.dll
+/主程序

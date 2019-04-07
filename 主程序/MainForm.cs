@@ -16,6 +16,7 @@ using System.Collections.Generic;
 
 using System.Drawing;
 using System.IO;
+using System.IO.Ports;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -24,10 +25,19 @@ namespace shikii.VisionJob
 {
 	public class MainForm : PageBase
 	{
-		 
-		 
+        private TCPFactoryServer factoryServer;
 
-		private static object LockHardwareTrigger = new object();
+        private TCPFactoryClient factoryClient;
+
+        private readonly string Y1OPEN = "AA 01 06 0A 00";
+
+        private readonly string Y1CLOSE = "AA 01 06 0B 00";
+
+        private readonly string Y2OPEN = "AA 01 07 0A 00";
+
+        private readonly string Y2CLOSE = "AA 01 07 0B 00";
+
+        private static object LockHardwareTrigger = new object();
 
 		private static object LockSoftwareTrigger = new object();
 
@@ -66,22 +76,30 @@ namespace shikii.VisionJob
 		private Label lbl_IncName;
 
 		private Direction btn_More;
+        private NormalPLC normalPLC;
 
-		public void PrepareCanvases()
+   
+
+        public void PrepareCanvases()
 		{
 
 			
 
-			try
-			{
-                CogGraphicLabel cogGraphicLabel = App.ThisJobTool.cnvs[0].AddDisplayLabel(30, 50);
-                cogGraphicLabel.Color = CogColorConstants.Yellow;
-    //            CurrentMakeupTableName = string.Format("X{0}_Makeup", App.GetShortProjectName());
-				//base.CompactDB.CreateKeyValueTable(CurrentMakeupTableName);
-			}
-			catch (Exception)
-			{
-			}
+			 
+                string strLightOnTime = base.CompactDB.FetchValue("LightOnTime", true, "-1");
+                if (!strLightOnTime.Equals("-1"))
+                {
+                    try
+                    {
+                        App.nLightOnTime = int.Parse(strLightOnTime);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                //            CurrentMakeupTableName = string.Format("X{0}_Makeup", App.GetShortProjectName());
+                //base.CompactDB.CreateKeyValueTable(CurrentMakeupTableName);
+            
 		}
 
 		public void ShortCutRun()
@@ -91,8 +109,20 @@ namespace shikii.VisionJob
 
 		public void PrepareCommunication()
 		{
-		 
-		}
+            //factoryClient = new TCPFactoryClient();
+            //factoryServer = new TCPFactoryServer();
+            normalPLC = new NormalPLC();
+         
+            base.CompactDB.TargetTable = "SerialPort";
+            normalPLC.PortName = base.CompactDB.FetchValue("COM", true, "0");
+            normalPLC.Parity = (Parity)base.CompactDB.FetchIntValue("Parity");
+            normalPLC.StopBits = (StopBits)base.CompactDB.FetchIntValue("StopBits");
+            normalPLC.BaudRate = base.CompactDB.FetchIntValue("BaudRate");
+            normalPLC.DataBits = base.CompactDB.FetchIntValue("DataBits");
+            normalPLC.BufferSize = 128;
+            normalPLC.Open();
+            base.CompactDB.TargetTable = base.CompactDB.DefaultTable;
+        }
 
 		private void ServerRouteMessage(int nWhichClient, byte[] byts)
 		{
@@ -127,7 +157,16 @@ namespace shikii.VisionJob
 
 		private void HardwareTiggerOccured(string CameraID, Cognex.VisionPro.ICogImage img)
 		{
-		}
+
+
+            switch (CameraID)
+            {
+                case "21699060": Run(App.ThisJobTool.ToolBlockSet[1],false, img);break;
+                case "21699078": Run(App.ThisJobTool.ToolBlockSet[1],false, img); break;
+            }
+
+            
+        }
 
 		private string NGOccured(ToolBlockPowerSuite toolBlockPowerSuite, Canvas cnv, Cognex.VisionPro.ICogRecord irc, object Outputs)
 		{
@@ -395,8 +434,25 @@ namespace shikii.VisionJob
 				HardwareTiggerOccured(cameraSerialNo, outputImage);
 			}
 		}
+        private void SendOK2PLC(int LightOnTime = 100)
+        {
+            InternalSendStatus2PLC(Y1OPEN, Y1CLOSE, LightOnTime);
+        }
 
-		private void ShowMenuForm()
+        private void SendNG2PLC(int LightOnTime = 100)
+        {
+            InternalSendStatus2PLC(Y2OPEN, Y2CLOSE, LightOnTime);
+        }
+
+        private void InternalSendStatus2PLC(string strHexLightOn, string strHexLightOff, int LightOnTime = 100)
+        {
+            byte[] bytArr2 = normalPLC.DecodeHexString(strHexLightOn);
+            normalPLC.Send(bytArr2);
+            Thread.Sleep(LightOnTime);
+            bytArr2 = normalPLC.DecodeHexString(strHexLightOff);
+            normalPLC.Send(bytArr2);
+        }
+        private void ShowMenuForm()
 		{
 			foreach (Form openForm in Application.OpenForms)
 			{
